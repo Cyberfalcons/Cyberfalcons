@@ -1,0 +1,78 @@
+Driving:
+
+	DriveSide
+		--> Left
+		--> Right
+ 
+Jaw:
+
+	fPU() {
+		--> Move Jaw Towards Front
+		--> Spin Roller Motors
+		--> After PickUp Return To Midway Position?
+	}
+
+	bPU() {
+		--> Move Jaw Towards Back
+		--> Spin Roller Motors
+		--> After PickUp Return To Midway Position?
+	}
+
+	autoShot(int shotType) {
+		--> Check Shot You Are Doing
+			==> for example: highGoal = 1
+		--> Move Jaw To Shooting Position (Angle)
+		--> Pull Back Kicker (power)
+		--> Open Jaw Mouth
+		--> Open Jaw Mouth
+		--> Fire
+		--> Close Jaw
+	}
+
+	manualShot(int angle, int power) {
+		--> Move Jaw To Angle
+		--> Pull Kicker To Power 
+		--> Open Jaw
+		--> Fire
+		--> Close Jaw
+	}
+
+	setJawState(boolean state) {
+		--> Opens or Closes Mouth Fully
+	}
+
+	roller(byte value) {
+		--> Move Roller Based On Byte Value
+	}
+
+	autoCatch() {
+		--> Sensor Senses Ball
+		--> Closes Jaw Mouth To Catch Ball
+	}
+
+	manualCatch() {
+		--> Closes Jaw Mouth To Catch Ball
+	}
+
+	powerKick(int power) {
+		--> Powers The Kick To The Designated Power
+	}
+
+Map: 
+	
+	--> Final Variables With Values For Each
+	--> Values That Don't Need To Be Changed 
+
+Sensor: 
+
+	--> Contains Methods For All Sensors
+
+	boolean isBallOnUltraSound() {
+		--> if (ballIsInView == true) {
+			return true;
+		    }
+		    else {
+			return false;
+		    }
+	}
+	
