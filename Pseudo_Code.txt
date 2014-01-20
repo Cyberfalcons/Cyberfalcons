@@ -42,8 +42,8 @@ Jaw:
 		--> Opens or Closes Mouth Fully
 	}
 
-	roller(byte value) {
-		--> Move Roller Based On Byte Value
+	roller(int value) {
+		--> Move Roller Based On int Value
 	}
 
 	autoCatch() {
