@@ -76,4 +76,8 @@ Sensor:
 			return false;
 		    }
 	}
+
+	--> sensors include: ultrasound, potentiometer, encoder
 	
+Signal :
+	--> stuff for signalling lights

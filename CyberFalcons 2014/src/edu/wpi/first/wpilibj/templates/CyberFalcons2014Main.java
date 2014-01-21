@@ -4,11 +4,10 @@
 /* must be accompanied by the FIRST BSD license file in the root directory of */
 /* the project.                                                               */
 /*----------------------------------------------------------------------------*/
-
 package edu.wpi.first.wpilibj.templates;
 
-
 import edu.wpi.first.wpilibj.IterativeRobot;
+import edu.wpi.first.wpilibj.Watchdog;
 
 /**
  * The VM is configured to automatically run this class, and to call the
@@ -18,54 +17,53 @@ import edu.wpi.first.wpilibj.IterativeRobot;
  * directory.
  */
 public class CyberFalcons2014Main extends IterativeRobot {
+
     /**
      * This function is run when the robot is first started up and should be
      * used for any initialization code.
      */
     public void robotInit() {
-
     }
-    
+
     /**
      * This function is called at the start of autonomous
      */
     public void autonomousInit() {
-        
     }
 
     /**
      * This function is called periodically during autonomous
      */
     public void autonomousPeriodic() {
+        Watchdog.getInstance().feed(); // Tell watchdog we are running
 
     }
-    
+
     /**
      * This function is called at the start of teleop
      */
     public void teleopInit() {
-        
     }
 
     /**
      * This function is called periodically during operator control
      */
     public void teleopPeriodic() {
-        
+        Watchdog.getInstance().feed(); // Tell watchdog we are running
+
     }
-    
+
     /**
      * This function is called at the start of test
      */
     public void testInit() {
-        
     }
-    
+
     /**
      * This function is called periodically during test mode
      */
     public void testPeriodic() {
-    
+        Watchdog.getInstance().feed(); // Tell watchdog we are running
+
     }
-    
 }
