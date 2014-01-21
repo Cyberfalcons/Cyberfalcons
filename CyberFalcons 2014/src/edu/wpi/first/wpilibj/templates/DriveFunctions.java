@@ -4,7 +4,6 @@
  */
 package edu.wpi.first.wpilibj.templates;
 
-
 import edu.wpi.first.wpilibj.*;
 
 /**
@@ -12,7 +11,12 @@ import edu.wpi.first.wpilibj.*;
  * @author Nathan Hicks
  */
 public class DriveFunctions {
-    
+
+    /**
+     * Dead-zone tolerance for the joysticks. The keyword 'final' means that
+     * this variable can not be assigned to (changed) elsewhere in the code.
+     */
+    final double DEADZONE;
     // Drive motors
     Talon driveRight;
     Talon driveLeft;
@@ -21,47 +25,61 @@ public class DriveFunctions {
     Solenoid shift2;
     // Control Variables
     boolean controlFlip;
-    
+
     /**
-     * 
+     *
      * @param dr - the right side drive talon
      * @param dl - the left side drive talon
      * @param s1 - the first shifting solenoid
      * @param s2 - the second shifting solenoid
      * @param cf - the control flip variable
+     * @param dz - the joystick Dead-zone
      */
-    public DriveFunctions(Talon dr, Talon dl, Solenoid s1, Solenoid s2, boolean cf) {
+    public DriveFunctions(Talon dr, Talon dl, Solenoid s1, Solenoid s2, boolean cf, double dz) {
         driveRight = dr;
         driveLeft = dl;
         shift1 = s1;
         shift2 = s2;
         controlFlip = cf;
+        DEADZONE = dz;
     }
-    
+
+    public void resetDriveSystem() {
+        setDriveRight(0);
+        setDriveLeft(0);
+        notShifting();
+    }
+
     /**
      * Sets the power to be given to the left drive motors
+     *
      * @param power - should be a directly given joystick input
      */
     public void setDriveLeft(double power) {
-        if (controlFlip) {
-            driveLeft.set(power);
-        } else {
-            driveLeft.set(-power);
+        if (power > -DEADZONE && power < DEADZONE) {
+            if (controlFlip) {
+                driveLeft.set(power);
+            } else {
+                driveLeft.set(-power);
+            }
         }
     }
-    
+
     /**
      * Sets the power to be given to the right drive motors
+     *
      * @param power - should be a directly given joystick input
      */
     public void setDriveRight(double power) {
-        if (controlFlip) {
-            driveLeft.set(-power);
-        } else {
-            driveLeft.set(power);
+        if (power > -DEADZONE && power < DEADZONE) {
+            if (controlFlip) {
+                driveLeft.set(-power);
+            } else {
+                driveLeft.set(power);
+            }
         }
     }
-    
+
     /**
      * Shifts to high gear.
      */
@@ -69,7 +87,7 @@ public class DriveFunctions {
         shift1.set(true);
         shift2.set(false);
     }
-    
+
     /**
      * Shifts to low gear.
      */
@@ -77,7 +95,7 @@ public class DriveFunctions {
         shift1.set(false);
         shift2.set(true);
     }
-    
+
     /**
      * Turns off shifting solenoids. Should always be called when not shifting.
      */
