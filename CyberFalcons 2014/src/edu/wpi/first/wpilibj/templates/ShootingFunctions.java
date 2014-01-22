@@ -16,6 +16,7 @@ public class ShootingFunctions {
 
     int DEADZONE;
     boolean shotFired = false;
+    boolean fireCalled = false;
     Victor neck;
     Relay winch;
     Solenoid openJaw;
@@ -45,6 +46,8 @@ public class ShootingFunctions {
             neck.set(-1);// needs to be changed for PID
         } else {
             // set to hold position using PID
+            fireCalled = true;
+            readyShot();
             fire();
         }
     }
@@ -54,7 +57,9 @@ public class ShootingFunctions {
             fire.set(true);
             resetFire.set(false);
             shotFired = true;
+            fireCalled = false;
         } else {
+            fireCalled = true;
             readyShot();
         }
     }
@@ -64,6 +69,8 @@ public class ShootingFunctions {
             resetFire.set(true);
             fire.set(false);
             shotFired = false;
+            openJaw.set(false);
+            closeJaw.set(false);
         } else {
             resetFire.set(false);
             fire.set(false);
@@ -72,6 +79,10 @@ public class ShootingFunctions {
             } else {
                 winch.set(Relay.Value.kOn);
             }
+        }
+        if (fireCalled) {
+            openJaw.set(true);
+            closeJaw.set(false);
         }
     }
 
@@ -82,7 +93,7 @@ public class ShootingFunctions {
             // set to hold position using PID 
         }
     }
-    
+
     public void freeNeck() {
         neck.set(0);
     }
