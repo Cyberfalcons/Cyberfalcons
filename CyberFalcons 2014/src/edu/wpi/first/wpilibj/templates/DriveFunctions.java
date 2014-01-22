@@ -62,6 +62,8 @@ public class DriveFunctions {
             } else {
                 driveLeft.set(-power);
             }
+        } else {
+            driveLeft.set(0);
         }
     }
 
@@ -73,10 +75,12 @@ public class DriveFunctions {
     public void setDriveRight(double power) {
         if (power > -DEADZONE && power < DEADZONE) {
             if (controlFlip) {
-                driveLeft.set(-power);
+                driveRight.set(-power);
             } else {
-                driveLeft.set(power);
+                driveRight.set(power);
             }
+        } else {
+            driveRight.set(0);
         }
     }
 

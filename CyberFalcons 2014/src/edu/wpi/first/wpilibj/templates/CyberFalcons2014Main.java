@@ -25,6 +25,7 @@ public class CyberFalcons2014Main extends IterativeRobot {
      * this variable can not be assigned to (changed) elsewhere in the code.
      */
     final double DEADZONE = 0.1;
+    final int[] shotPotValue = {1,2,3,4,5};
     // Xbox controllers
     XBoxController xboxDriver;
     // Drive motors

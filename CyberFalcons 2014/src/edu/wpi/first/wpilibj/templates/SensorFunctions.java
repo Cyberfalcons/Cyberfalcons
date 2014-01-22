@@ -15,16 +15,21 @@ import edu.wpi.first.wpilibj.Encoder;
 public class SensorFunctions {
     
     final int exampleVal = 500;
+    int shotReadyValue;
     
     DigitalInput ardUltra;
-    
+    AnalogChannel neckPot;
+    AnalogChannel winchPot;
     AnalogChannel examplePot; // is example only
     Encoder exampleEnc; // is example only
     
-    public SensorFunctions() {
+    public SensorFunctions(AnalogChannel np, AnalogChannel wp, int srv) {
         ardUltra = new DigitalInput(1,9001); // REPLACE WITH MAP THINGS
         examplePot = new AnalogChannel(1,9001); // is example only
         exampleEnc = new Encoder(9001,9001); // is example only
+        neckPot = np;
+        winchPot = wp;
+        shotReadyValue = srv;
     }
     
     public boolean isBallOnUltraSound() {
@@ -34,6 +39,14 @@ public class SensorFunctions {
     public int getPot(int potChan) {
         AnalogChannel pot = new AnalogChannel(1,potChan);
         return pot.getValue();
+    }
+    
+    public int getNeckPot() {
+        return neckPot.getValue();
+    }
+    
+    public boolean shotReady() {
+        return winchPot.getValue() > shotReadyValue;
     }
     
     // example of pot boolean
