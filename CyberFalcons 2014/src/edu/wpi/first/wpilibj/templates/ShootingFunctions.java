@@ -26,6 +26,18 @@ public class ShootingFunctions {
     int[] potShotValue;
     SensorFunctions sf;
 
+    /**
+     * 
+     * @param n - the victor that controls the neck
+     * @param w - the spike that controls the winch
+     * @param o
+     * @param c
+     * @param f
+     * @param r
+     * @param shotValues
+     * @param dz
+     * @param sFunctions 
+     */
     public ShootingFunctions(Victor n, Relay w, Solenoid o, Solenoid c, Solenoid f,
             Solenoid r, int[] shotValues, int dz, SensorFunctions sFunctions) {
         neck = n;
@@ -87,7 +99,7 @@ public class ShootingFunctions {
     }
 
     public void manualAim(int direction) {
-        if (direction > -DEADZONE && direction < DEADZONE) {
+        if (direction < -DEADZONE || direction > DEADZONE) {
             neck.set(direction);
         } else {
             // set to hold position using PID 

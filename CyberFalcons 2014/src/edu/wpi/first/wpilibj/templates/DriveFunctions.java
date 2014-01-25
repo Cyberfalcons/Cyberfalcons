@@ -18,13 +18,16 @@ public class DriveFunctions {
      */
     final double DEADZONE;
     // Drive motors
-    Talon driveRight;
-    Talon driveLeft;
+    /*Talon*/Jaguar driveRight;
+    /*Talon*/Jaguar driveLeft;
     // Shifting Solenoids
     Solenoid shift1;
     Solenoid shift2;
+    // Sensor access
+    SensorFunctions sf;
     // Control Variables
     boolean controlFlip;
+    boolean holdingPosition;
 
     /**
      *
@@ -35,19 +38,23 @@ public class DriveFunctions {
      * @param cf - the control flip variable
      * @param dz - the joystick Dead-zone
      */
-    public DriveFunctions(Talon dr, Talon dl, Solenoid s1, Solenoid s2, boolean cf, double dz) {
+    public DriveFunctions(/*Talon*/Jaguar dr, /*Talon*/Jaguar dl, Solenoid s1, 
+            Solenoid s2, boolean cf, double dz, SensorFunctions sFunctions) {
         driveRight = dr;
         driveLeft = dl;
         shift1 = s1;
         shift2 = s2;
         controlFlip = cf;
         DEADZONE = dz;
+        sf = sFunctions;
+        holdingPosition = false;
     }
 
     public void resetDriveSystem() {
         setDriveRight(0);
         setDriveLeft(0);
         notShifting();
+        notHoldingPosition();
     }
 
     /**
@@ -56,7 +63,7 @@ public class DriveFunctions {
      * @param power - should be a directly given joystick input
      */
     public void setDriveLeft(double power) {
-        if (power > -DEADZONE && power < DEADZONE) {
+        if (power < -DEADZONE || power > DEADZONE) {
             if (controlFlip) {
                 driveLeft.set(power);
             } else {
@@ -73,7 +80,7 @@ public class DriveFunctions {
      * @param power - should be a directly given joystick input
      */
     public void setDriveRight(double power) {
-        if (power > -DEADZONE && power < DEADZONE) {
+        if (power < -DEADZONE || power > DEADZONE) {
             if (controlFlip) {
                 driveRight.set(-power);
             } else {
@@ -106,5 +113,33 @@ public class DriveFunctions {
     public void notShifting() {
         shift1.set(false);
         shift2.set(false);
+    }
+    
+    public void holdPosition() {
+        if (!holdingPosition) {
+            holdingPosition = true;
+            sf.zeroDriveEncoders();
+            setDriveLeft(0);
+            setDriveRight(0);
+        } else { // this part needs to be ajusted for PID control
+            if (sf.getLeftDriveEncoder() > 10) {
+                setDriveLeft(-1);
+            } else if (sf.getLeftDriveEncoder() < -10) {
+                setDriveLeft(1);
+            } else {
+                setDriveLeft(0);
+            }
+            if (sf.getRightDriveEncoder() > 10) {
+                setDriveRight(-1);
+            } else if (sf.getRightDriveEncoder() < -10) {
+                setDriveRight(1);
+            } else {
+                setDriveRight(0);
+            }
+        }
+    }
+    
+    public void notHoldingPosition() {
+        holdingPosition = false;
     }
 }

@@ -20,16 +20,28 @@ public class SensorFunctions {
     DigitalInput ardUltra;
     AnalogChannel neckPot;
     AnalogChannel winchPot;
+    Encoder driveLeftE;
+    Encoder driveRightE;
     AnalogChannel examplePot; // is example only
     Encoder exampleEnc; // is example only
     
-    public SensorFunctions(AnalogChannel np, AnalogChannel wp, int srv) {
+    /**
+     * 
+     * @param np - potentiometer for the neck
+     * @param wp - potentiometer for the winch
+     * @param srv - shot ready value
+     * @param dl - left drive encoder
+     * @param dr - right drive encoder
+     */
+    public SensorFunctions(AnalogChannel np, AnalogChannel wp, int srv, Encoder dl, Encoder dr) {
         ardUltra = new DigitalInput(1,9001); // REPLACE WITH MAP THINGS
         examplePot = new AnalogChannel(1,9001); // is example only
         exampleEnc = new Encoder(9001,9001); // is example only
         neckPot = np;
         winchPot = wp;
         shotReadyValue = srv;
+        driveLeftE = dl;
+        driveRightE = dr;
     }
     
     public boolean isBallOnUltraSound() {
@@ -47,6 +59,19 @@ public class SensorFunctions {
     
     public boolean shotReady() {
         return winchPot.getValue() > shotReadyValue;
+    }
+    
+    public double getLeftDriveEncoder() {
+        return driveLeftE.getDistance();
+    }
+    
+    public double getRightDriveEncoder() {
+        return driveRightE.getDistance();
+    }
+    
+    public void zeroDriveEncoders() {
+        driveLeftE.reset();
+        driveRightE.reset();
     }
     
     // example of pot boolean

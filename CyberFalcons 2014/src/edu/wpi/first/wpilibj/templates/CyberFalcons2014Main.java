@@ -19,21 +19,31 @@ public class CyberFalcons2014Main extends IterativeRobot {
 
     // Functions
     DriveFunctions df;
+    SensorFunctions sf;
     /* CONSTANTS */
     /**
      * Dead-zone tolerance for the joysticks. The keyword 'final' means that
      * this variable can not be assigned to (changed) elsewhere in the code.
      */
     final double DEADZONE = 0.1;
-    final int[] shotPotValue = {1,2,3,4,5};
+    final int[] shotPotValue = {1, 2, 3, 4, 5};
+    final int shotReadyValue = 324;
     // Xbox controllers
     XBoxController xboxDriver;
     // Drive motors
-    Talon talonDriveRight;
-    Talon talonDriveLeft;
+    /*Talon*/
+    Jaguar talonDriveRight;
+    /*Talon*/
+    Jaguar talonDriveLeft;
     // Gear shifter
     Solenoid shifter1;
     Solenoid shifter2;
+    // Drive encoders
+    Encoder driveLeftE;
+    Encoder driveRightE;
+    // Sensors
+    AnalogChannel neckPot;
+    AnalogChannel winchPot;
     // Operation Variables
     boolean teleopActive = false;
     boolean controlFlip = false;
@@ -49,14 +59,17 @@ public class CyberFalcons2014Main extends IterativeRobot {
         xboxDriver = new XBoxController(1); // USB port 1
 
         // Drive Motors
-        talonDriveRight = new Talon(/*cRIO slot*/1, /*PWM channel*/ 1);
-        talonDriveLeft = new Talon(/*cRIO slot*/1, /*PWM channel*/ 2);
+        talonDriveRight = new /*Talon*/ Jaguar(/*cRIO slot*/1, /*PWM channel*/ 1);
+        talonDriveLeft = new /*Talon*/ Jaguar(/*cRIO slot*/1, /*PWM channel*/ 2);
         // Gear shifter
         shifter1 = new Solenoid(/*cRIO slot*/1, /*channel*/ 7);
         shifter2 = new Solenoid(/*cRIO slot*/1, /*channel*/ 8);
+        // Sensors
+        neckPot = new AnalogChannel(/*cRIO slot*/1, /*channel*/ 8);
 
 
-        df = new DriveFunctions(talonDriveRight, talonDriveLeft, shifter1, shifter2, controlFlip, DEADZONE);
+        sf = new SensorFunctions(neckPot, winchPot, shotReadyValue, driveLeftE, driveRightE);
+        df = new DriveFunctions(talonDriveRight, talonDriveLeft, shifter1, shifter2, controlFlip, DEADZONE, sf);
 
     }
 
@@ -115,24 +128,31 @@ public class CyberFalcons2014Main extends IterativeRobot {
     public void testPeriodic() {
         Watchdog.getInstance().feed(); // Tell watchdog we are running
 
+        System.out.println(neckPot.getValue());
         drive();
     }
 
     public void drive() {
-        if (xboxDriver.getBtnL3()) {
-            toggleControlFlip();
-        }
-        
-        if (xboxDriver.getBtnRB()) {
-            df.shiftLow();
-        } else if (xboxDriver.getBtnLB()) {
-            df.shiftHigh();
+        if (xboxDriver.getBtnA()) {
+            df.holdPosition();
         } else {
-            df.notShifting();
+            df.notHoldingPosition();
+            
+            if (xboxDriver.getBtnL3()) {
+                toggleControlFlip();
+            }
+
+            if (xboxDriver.getBtnRB()) {
+                df.shiftLow();
+            } else if (xboxDriver.getBtnLB()) {
+                df.shiftHigh();
+            } else {
+                df.notShifting();
+            }
+
+            df.setDriveRight(xboxDriver.getRightY());
+            df.setDriveLeft(xboxDriver.getLeftY());
         }
-        
-        df.setDriveRight(xboxDriver.getRightY());
-        df.setDriveLeft(xboxDriver.getLeftY());
     }
 
     public void toggleControlFlip() {
