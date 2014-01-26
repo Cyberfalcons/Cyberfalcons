@@ -7,6 +7,7 @@
 package edu.wpi.first.wpilibj.templates;
 
 import edu.wpi.first.wpilibj.*;
+import edu.wpi.first.wpilibj.CounterBase.EncodingType;
 
 /**
  * The VM is configured to automatically run this class, and to call the
@@ -64,8 +65,13 @@ public class CyberFalcons2014Main extends IterativeRobot {
         // Gear shifter
         shifter1 = new Solenoid(/*cRIO slot*/1, /*channel*/ 7);
         shifter2 = new Solenoid(/*cRIO slot*/1, /*channel*/ 8);
+        // Drive Encoders
+        driveRightE = new Encoder(/*Digital I/O channelA*/1, /*Digital I/O channelB*/ 2);
+        driveLeftE = new Encoder(/*Digital I/O channelA*/3, /*Digital I/O channelB*/ 4, true, EncodingType.k4X);
+        driveRightE.start();
+        driveLeftE.start();
         // Sensors
-        neckPot = new AnalogChannel(/*cRIO slot*/1, /*channel*/ 8);
+//        neckPot = new AnalogChannel(/*cRIO slot*/1, /*channel*/ 8);
 
 
         sf = new SensorFunctions(neckPot, winchPot, shotReadyValue, driveLeftE, driveRightE);
@@ -103,7 +109,6 @@ public class CyberFalcons2014Main extends IterativeRobot {
      */
     public void teleopPeriodic() {
         Watchdog.getInstance().feed(); // Tell watchdog we are running
-
         // activate the robot by pushing start button
         if (xboxDriver.getBtnSTART()) {
             teleopActive = true;
@@ -128,10 +133,18 @@ public class CyberFalcons2014Main extends IterativeRobot {
     public void testPeriodic() {
         Watchdog.getInstance().feed(); // Tell watchdog we are running
 
-        System.out.println(neckPot.getValue());
         drive();
+        if (xboxDriver.getBtnB()) {
+            driveLeftE.start();
+        }
+        System.out.println(driveLeftE.get() + "     " + driveLeftE.getDistance() + "      " 
+                + driveLeftE.getRaw() + "       " + driveLeftE.getDirection() + "       "
+                + driveLeftE.getRate());
     }
 
+    /**
+     *
+     */
     public void drive() {
         if (xboxDriver.getBtnA()) {
             df.holdPosition();
@@ -155,6 +168,9 @@ public class CyberFalcons2014Main extends IterativeRobot {
         }
     }
 
+    /**
+     *
+     */
     public void toggleControlFlip() {
         if (controlFlipClean) {
             controlFlipClean = false;
