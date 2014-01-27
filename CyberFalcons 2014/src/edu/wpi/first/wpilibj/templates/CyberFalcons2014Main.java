@@ -39,7 +39,7 @@ public class CyberFalcons2014Main extends IterativeRobot {
     int dioEncoderRightA = 1;
     int dioEncoderRightB = 2;
     int dioEncoderLeftA = 3;
-    int dioEncoderRightB = 4;
+    int dioEncoderLeftB = 4;
     
     
     // Xbox controllers
