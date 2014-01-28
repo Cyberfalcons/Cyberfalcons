@@ -21,26 +21,6 @@ public class CyberFalcons2014Main extends IterativeRobot {
     // Functions
     DriveFunctions df;
     SensorFunctions sf;
-    /* CONSTANTS */
-    /**
-     * Dead-zone tolerance for the joysticks. The keyword 'final' means that
-     * this variable can not be assigned to (changed) elsewhere in the code.
-     */
-    final double DEADZONE = 0.1;
-    final int[] shotPotValue = {1, 2, 3, 4, 5};
-    final int shotReadyValue = 324;
-    
-    // PWM Channel Pinout - should be in robot map
-    int pwmDriveRight = 1;
-    int pwmDriveLeft = 2;
-    
-    
-    // Digital IO Pinout - should be in robot map
-    int dioEncoderRightA = 1;
-    int dioEncoderRightB = 2;
-    int dioEncoderLeftA = 3;
-    int dioEncoderRightB = 4;
-    
     
     // Xbox controllers
     XBoxController xboxDriver;
@@ -60,27 +40,25 @@ public class CyberFalcons2014Main extends IterativeRobot {
     AnalogChannel winchPot;
     // Operation Variables
     boolean teleopActive = false;
-    boolean controlFlip = false;
-    boolean controlFlipClean = true;
 
     /**
      * This function is run when the robot is first started up and should be
      * used for any initialization code.
      */
     public void robotInit() {
-
+        
         // Xbox Controllers
         xboxDriver = new XBoxController(1); // USB port 1
 
         // Drive Motors
-        talonDriveRight = new /*Talon*/ Jaguar(/*cRIO slot*/1, pwmDriveRight);
-        talonDriveLeft = new /*Talon*/ Jaguar(/*cRIO slot*/1, pwmDriveLeft);
+        talonDriveRight = new /*Talon*/ Jaguar(/*cRIO slot*/1, VariableMap.PWM_DRIVERIGHT);
+        talonDriveLeft = new /*Talon*/ Jaguar(/*cRIO slot*/1, VariableMap.PWM_DRIVELEFT);
         // Gear shifter
-        shifter1 = new Solenoid(/*cRIO slot*/1, /*channel*/ 7);
-        shifter2 = new Solenoid(/*cRIO slot*/1, /*channel*/ 8);
+        shifter1 = new Solenoid(/*cRIO slot*/1, /*channel*/ VariableMap.SOLO_DRIVE_LEFT);
+        shifter2 = new Solenoid(/*cRIO slot*/1, /*channel*/ VariableMap.SOLO_DRIVE_RIGHT);
         // Drive Encoders
-        driveRightE = new Encoder(dioEncoderRightA, dioEncoderRightB);
-        driveLeftE = new Encoder(dioEncoderLeftA, dioEncoderLeftB, true, EncodingType.k4X); // Check EncodingType?
+        driveRightE = new Encoder(VariableMap.DIO_ENCODER_RIGHT_A, VariableMap.DIO_ENCODER_RIGHT_B,  true, EncodingType.k4X);
+        driveLeftE = new Encoder(VariableMap.DIO_ENCODER_LEFT_A, VariableMap.DIO_ENCODER_LEFT_B, true, EncodingType.k4X);
         driveRightE.start();
         driveLeftE.start();
         driveRightE.reset();
@@ -89,8 +67,9 @@ public class CyberFalcons2014Main extends IterativeRobot {
 //        neckPot = new AnalogChannel(/*cRIO slot*/1, /*channel*/ 8);
 
 
-        sf = new SensorFunctions(neckPot, winchPot, shotReadyValue, driveLeftE, driveRightE);
-        df = new DriveFunctions(talonDriveRight, talonDriveLeft, shifter1, shifter2, controlFlip, DEADZONE, sf);
+        sf = new SensorFunctions(neckPot, winchPot, driveLeftE, driveRightE);
+        df = new DriveFunctions(talonDriveRight, talonDriveLeft, 
+                driveRightE, driveLeftE, shifter1, shifter2, sf);
 
     }
 
@@ -114,8 +93,8 @@ public class CyberFalcons2014Main extends IterativeRobot {
      */
     public void teleopInit() {
         df.resetDriveSystem();
-        if (controlFlip) {
-            toggleControlFlip();
+        if (df.controlFlip) {
+            df.toggleControlFlip();
         }
     }
 
@@ -153,11 +132,7 @@ public class CyberFalcons2014Main extends IterativeRobot {
 
         drive();
         if (xboxDriver.getBtnB()) {
-            driveLeftE.start();
-            /** To debug, let's try replacing with this:
-             * driveLeftE.reset();
-             * -BR
-             */
+            driveLeftE.reset();
         }
         // Printing to console to get encoder data (here for debugging Jan 25)
         System.out.println(driveLeftE.get() + "     " + driveLeftE.getDistance() + "      " 
@@ -166,17 +141,17 @@ public class CyberFalcons2014Main extends IterativeRobot {
     }
 
     /**
-     * PLEASE ADD A DESCRIPTION OF THIS: Looks like it just checks the Driver's xbox 
-     * controller and calls the apprpriate functions? -BR
+     * Maps all the various drive functions to buttons on the driver's xbox controller
      */
     public void drive() {
         if (xboxDriver.getBtnA()) {
-            df.holdPosition();
-        } else {
+            df.holdPosition(0);
+        } 
+        if (!df.isHoldingPosition()){
             df.notHoldingPosition();
             
             if (xboxDriver.getBtnL3()) {
-                toggleControlFlip();
+                df.toggleControlFlip();
             }
 
             if (xboxDriver.getBtnRB()) {
@@ -190,18 +165,5 @@ public class CyberFalcons2014Main extends IterativeRobot {
             df.setDriveRight(xboxDriver.getRightY());
             df.setDriveLeft(xboxDriver.getLeftY());
         }
-    }
-
-    /**
-     * PLEASE ADD A DESCRIPTION OF WHAT THIS DOES - and should it be within the drive functions class? -BR
-     */
-    public void toggleControlFlip() {
-        if (controlFlipClean) {
-            controlFlipClean = false;
-            controlFlip = !controlFlip;
-        } else {
-            controlFlipClean = true;
-        }
-        df.controlFlip = controlFlip;
     }
 }

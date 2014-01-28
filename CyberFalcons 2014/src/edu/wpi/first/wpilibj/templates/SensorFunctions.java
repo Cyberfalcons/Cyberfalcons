@@ -33,13 +33,13 @@ public class SensorFunctions {
      * @param dl - left drive encoder
      * @param dr - right drive encoder
      */
-    public SensorFunctions(AnalogChannel np, AnalogChannel wp, int srv, Encoder dl, Encoder dr) {
+    public SensorFunctions(AnalogChannel np, AnalogChannel wp, Encoder dl, Encoder dr) {
 //        ardUltra = new DigitalInput(1,9001); // REPLACE WITH MAP THINGS
 //        examplePot = new AnalogChannel(1,9001); // is example only
 //        exampleEnc = new Encoder(9001,9001); // is example only
         neckPot = np;
         winchPot = wp;
-        shotReadyValue = srv;
+        shotReadyValue = VariableMap.SHOT_READY_VALUE;
         driveLeftE = dl;
         driveRightE = dr;
     }

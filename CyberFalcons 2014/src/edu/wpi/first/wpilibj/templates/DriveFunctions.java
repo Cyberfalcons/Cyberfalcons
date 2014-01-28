@@ -17,16 +17,23 @@ public class DriveFunctions {
      * this variable can not be assigned to (changed) elsewhere in the code.
      */
     final double DEADZONE;
+    // PID Controller
+    PIDController pidCL;
+    PIDController pidCR;
     // Drive motors
     /*Talon*/Jaguar driveRight;
     /*Talon*/Jaguar driveLeft;
     // Shifting Solenoids
     Solenoid shift1;
     Solenoid shift2;
+    // Drive encoders
+    Encoder driveLeftE;
+    Encoder driveRightE;
     // Sensor access
     SensorFunctions sf;
     // Control Variables
     boolean controlFlip;
+    boolean controlFlipClean;
     boolean holdingPosition;
 
     /**
@@ -38,16 +45,21 @@ public class DriveFunctions {
      * @param cf - the control flip variable
      * @param dz - the joystick Dead-zone
      */
-    public DriveFunctions(/*Talon*/Jaguar dr, /*Talon*/Jaguar dl, Solenoid s1, 
-            Solenoid s2, boolean cf, double dz, SensorFunctions sFunctions) {
+    public DriveFunctions(/*Talon*/Jaguar dr, /*Talon*/Jaguar dl, Encoder drE, Encoder dlE, Solenoid s1, 
+            Solenoid s2, SensorFunctions sFunctions) {
         driveRight = dr;
         driveLeft = dl;
+        driveRightE = drE;
+        driveLeftE = dlE;
         shift1 = s1;
         shift2 = s2;
-        controlFlip = cf;
-        DEADZONE = dz;
+        controlFlip = false;
+        controlFlipClean = true;
+        DEADZONE = VariableMap.DEADZONE;
         sf = sFunctions;
         holdingPosition = false;
+        pidCL = new PIDController(1,1,0,driveLeftE,driveLeft);
+        pidCR = new PIDController(1,1,0,driveRightE,driveRight);
     }
 
     public void resetDriveSystem() {
@@ -115,31 +127,40 @@ public class DriveFunctions {
         shift2.set(false);
     }
     
-    public void holdPosition() {
-        if (!holdingPosition) {
-            holdingPosition = true;
-            sf.zeroDriveEncoders();
-            setDriveLeft(0);
-            setDriveRight(0);
-        } else { // this part needs to be ajusted for PID control
-            if (sf.getLeftDriveEncoder() > 10) {
-                setDriveLeft(-1);
-            } else if (sf.getLeftDriveEncoder() < -10) {
-                setDriveLeft(1);
-            } else {
-                setDriveLeft(0);
-            }
-            if (sf.getRightDriveEncoder() > 10) {
-                setDriveRight(-1);
-            } else if (sf.getRightDriveEncoder() < -10) {
-                setDriveRight(1);
-            } else {
-                setDriveRight(0);
-            }
+    public void holdPosition(double position) {
+        if (!pidCL.isEnable()) {
+            driveLeftE.reset();
+            pidCL.enable();
         }
+        if (!pidCR.isEnable()) {
+            driveRightE.reset();
+            pidCR.enable();
+        }
+        pidCL.setSetpoint(position);
+        pidCR.setSetpoint(position);
     }
     
     public void notHoldingPosition() {
-        holdingPosition = false;
+        pidCL.disable();
+        pidCR.disable();
+    }
+    
+    public boolean isHoldingPosition() {
+        if (pidCL.isEnable() || pidCR.isEnable()) {
+            return true;
+        }
+        return false;
+    }
+    
+    /**
+     * Switches the direction that is forward.
+     */
+    public void toggleControlFlip() {
+        if (controlFlipClean) {
+            controlFlipClean = false;
+            controlFlip = !controlFlip;
+        } else {
+            controlFlipClean = true;
+        }
     }
 }

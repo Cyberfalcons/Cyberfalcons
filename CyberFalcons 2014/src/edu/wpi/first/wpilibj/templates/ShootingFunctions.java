@@ -14,7 +14,7 @@ import edu.wpi.first.wpilibj.Victor;
  */
 public class ShootingFunctions {
 
-    int DEADZONE;
+    final double DEADZONE;
     boolean shotFired = false;
     boolean fireCalled = false;
     Victor neck;
@@ -34,20 +34,18 @@ public class ShootingFunctions {
      * @param c
      * @param f
      * @param r
-     * @param shotValues
-     * @param dz
      * @param sFunctions 
      */
     public ShootingFunctions(Victor n, Relay w, Solenoid o, Solenoid c, Solenoid f,
-            Solenoid r, int[] shotValues, int dz, SensorFunctions sFunctions) {
+            Solenoid r, SensorFunctions sFunctions) {
         neck = n;
         winch = w;
         openJaw = o;
         closeJaw = c;
         fire = f;
         resetFire = r;
-        potShotValue = shotValues;
-        DEADZONE = dz;
+        potShotValue = VariableMap.SHOT_POT_VALUES;
+        DEADZONE = VariableMap.DEADZONE;
         sf = sFunctions;
     }
 
