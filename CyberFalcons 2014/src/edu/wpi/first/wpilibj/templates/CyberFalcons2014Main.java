@@ -21,6 +21,29 @@ public class CyberFalcons2014Main extends IterativeRobot {
     // Functions
     DriveFunctions df;
     SensorFunctions sf;
+<<<<<<< HEAD
+=======
+    /* CONSTANTS */
+    /**
+     * Dead-zone tolerance for the joysticks. The keyword 'final' means that
+     * this variable can not be assigned to (changed) elsewhere in the code.
+     */
+    final double DEADZONE = 0.1;
+    final int[] shotPotValue = {1, 2, 3, 4, 5};
+    final int shotReadyValue = 324;
+    
+    // PWM Channel Pinout - should be in robot map
+    int pwmDriveRight = 1;
+    int pwmDriveLeft = 2;
+    
+    
+    // Digital IO Pinout - should be in robot map
+    int dioEncoderRightA = 1;
+    int dioEncoderRightB = 2;
+    int dioEncoderLeftA = 3;
+    int dioEncoderLeftB = 4;
+    
+>>>>>>> efb2f0f9a8fd80c260bc1d207c112d03bcf2660e
     
     // Xbox controllers
     XBoxController xboxDriver;
