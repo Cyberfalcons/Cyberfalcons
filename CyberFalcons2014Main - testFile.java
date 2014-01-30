@@ -60,18 +60,18 @@ public class CyberFalcons2014Main extends IterativeRobot {
 //        shifter2 = new Solenoid(/*cRIO slot*/1, /*channel*/ VariableMap.SOLO_DRIVE_RIGHT);
         // Drive Encoders
 //        driveRightE = new Encoder(VariableMap.DIO_ENCODER_RIGHT_A, VariableMap.DIO_ENCODER_RIGHT_B,  false, EncodingType.k4X);
-//        driveLeftE = new Encoder(VariableMap.DIO_ENCODER_LEFT_A, VariableMap.DIO_ENCODER_LEFT_B, true, EncodingType.k4X);
-//        driveLeftE.setDistancePerPulse(5);
-//        driveLeftE.setMaxPeriod(10000);
-//        driveLeftE.setMinRate(0.00001);
-//        driveLeftE.stop();
+        driveLeftE = new Encoder(VariableMap.DIO_ENCODER_LEFT_A, VariableMap.DIO_ENCODER_LEFT_B, true, EncodingType.k4X);
+        driveLeftE.setDistancePerPulse(5);
+        driveLeftE.setMaxPeriod(10000);
+        driveLeftE.setMinRate(0.00001);
+        driveLeftE.stop();
 //        driveRightE.start();
-//        driveLeftE.start();
+        driveLeftE.start();
 //        driveRightE.reset();
-//        driveLeftE.reset();
+        driveLeftE.reset();
         // Sensors
 //        neckPot = new AnalogChannel(/*cRIO slot*/1, /*channel*/ 8);
-testSwitch = new DigitalInput(1,1);
+//        testSwitch = new DigitalInput(1,1);
 
 //        sf = new SensorFunctions(neckPot, winchPot, driveLeftE, driveRightE);
 //        df = new DriveFunctions(talonDriveRight, talonDriveLeft, 
@@ -142,10 +142,12 @@ testSwitch = new DigitalInput(1,1);
 //            driveLeftE.reset();
 //        }
         // Printing to console to get encoder data (here for debugging Jan 25)
-//        System.out.println(/*driveLeftE.get() + "     " + */driveLeftE.getDistance() + "      "
-//                + driveLeftE.getRaw() + "       " + driveLeftE.getDirection() + "       "
-//                + driveLeftE.getRate());
-        System.out.println(testSwitch.get());
+        System.out.println(/*driveLeftE.get() + "     " + */driveLeftE.getDistance() + "      "
+                + driveLeftE.getRaw() + "       " + driveLeftE.getDirection() + "       "
+                + driveLeftE.getRate());
+
+        //Trying with limit switch to test sidecar Digital I/O channels
+//        System.out.println(testSwitch.get());
     }
 
     /**
