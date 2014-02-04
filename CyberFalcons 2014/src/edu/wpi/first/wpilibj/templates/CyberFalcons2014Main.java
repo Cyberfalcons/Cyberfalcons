@@ -21,14 +21,17 @@ public class CyberFalcons2014Main extends IterativeRobot {
     // Functions
     DriveFunctions df;
     SensorFunctions sf;
-    
     // Xbox controllers
     XBoxController xboxDriver;
     // Drive motors
     /*Talon*/
     Jaguar talonDriveRight;
     /*Talon*/
+    Jaguar talonDriveRight2;
+    /*Talon*/
     Jaguar talonDriveLeft;
+    /*Talon*/
+    Jaguar talonDriveLeft2;
     // Gear shifter
     Solenoid shifter1;
     Solenoid shifter2;
@@ -40,35 +43,42 @@ public class CyberFalcons2014Main extends IterativeRobot {
     AnalogChannel winchPot;
     // Operation Variables
     boolean teleopActive = false;
+    
+    DigitalInput testSwitch;
 
     /**
      * This function is run when the robot is first started up and should be
      * used for any initialization code.
      */
     public void robotInit() {
-        
+
         // Xbox Controllers
         xboxDriver = new XBoxController(1); // USB port 1
 
         // Drive Motors
         talonDriveRight = new /*Talon*/ Jaguar(/*cRIO slot*/1, VariableMap.PWM_DRIVERIGHT);
+        talonDriveRight2 = new /*Talon*/ Jaguar(/*cRIO slot*/1, VariableMap.PWM_DRIVERIGHT2);
         talonDriveLeft = new /*Talon*/ Jaguar(/*cRIO slot*/1, VariableMap.PWM_DRIVELEFT);
+        talonDriveLeft2 = new /*Talon*/ Jaguar(/*cRIO slot*/1, VariableMap.PWM_DRIVELEFT2);
         // Gear shifter
         shifter1 = new Solenoid(/*cRIO slot*/1, /*channel*/ VariableMap.SOLO_DRIVE_LEFT);
         shifter2 = new Solenoid(/*cRIO slot*/1, /*channel*/ VariableMap.SOLO_DRIVE_RIGHT);
         // Drive Encoders
         driveRightE = new Encoder(VariableMap.DIO_ENCODER_RIGHT_A, VariableMap.DIO_ENCODER_RIGHT_B,  true, EncodingType.k4X);
-        driveLeftE = new Encoder(VariableMap.DIO_ENCODER_LEFT_A, VariableMap.DIO_ENCODER_LEFT_B, true, EncodingType.k4X);
+        driveLeftE = new Encoder(VariableMap.DIO_ENCODER_LEFT_A, VariableMap.DIO_ENCODER_LEFT_B, false, EncodingType.k4X);
+//        driveLeftE.setDistancePerPulse(5);
+        driveLeftE.setMaxPeriod(5);
+        driveLeftE.setMinRate(0.001);
+//        driveLeftE.stop();
         driveRightE.start();
         driveLeftE.start();
-        driveRightE.reset();
-        driveLeftE.reset();
+//        driveRightE.reset();
+//        driveLeftE.reset();
         // Sensors
 //        neckPot = new AnalogChannel(/*cRIO slot*/1, /*channel*/ 8);
 
-
         sf = new SensorFunctions(neckPot, winchPot, driveLeftE, driveRightE);
-        df = new DriveFunctions(talonDriveRight, talonDriveLeft, 
+        df = new DriveFunctions(talonDriveRight, talonDriveRight2, talonDriveLeft, talonDriveLeft2, 
                 driveRightE, driveLeftE, shifter1, shifter2, sf);
 
     }
@@ -96,6 +106,9 @@ public class CyberFalcons2014Main extends IterativeRobot {
         if (df.controlFlip) {
             df.toggleControlFlip();
         }
+        driveLeftE.stop();
+        driveLeftE.reset();
+        driveLeftE.start();
     }
 
     /**
@@ -103,19 +116,35 @@ public class CyberFalcons2014Main extends IterativeRobot {
      */
     public void teleopPeriodic() {
         // Tell watchdog we are running
-        Watchdog.getInstance().feed(); 
+//        Watchdog.getInstance().feed();
+//
+//        // Activate the robot by pushing start button
+//        if (xboxDriver.getBtnSTART()) {
+//            teleopActive = true;
+//        }
+//        if (!teleopActive) {
+//            // Only run if teleop has been active
+//            return;
+//        }
+//
+//        drive();
         
-        // Activate the robot by pushing start button
-        if (xboxDriver.getBtnSTART()) {
-            teleopActive = true;
-        }
-        if (!teleopActive) {
-            // Only run if teleop has been active
-            return;         
-        }
+        
+        Watchdog.getInstance().feed(); // Tell watchdog we are running
 
         drive();
+        if (xboxDriver.getBtnB()) {
+//            System.out.println("Resetting the encoder");
+            driveLeftE.reset();
+        }
+        // Printing to console to get encoder data (here for debugging Jan 25)
+        System.out.println(driveLeftE.get() + "     " + driveLeftE.getDistance() + "      "
+                + driveLeftE.getRaw() + "       " + driveLeftE.getDirection() + "       "
+                + driveLeftE.getRate() +"\tI think I\'m stopped?: " +driveLeftE.getStopped() );
     }
+    
+    
+    
 
     /**
      * This function is called at the start of test
@@ -128,28 +157,20 @@ public class CyberFalcons2014Main extends IterativeRobot {
      * This function is called periodically during test mode
      */
     public void testPeriodic() {
-        Watchdog.getInstance().feed(); // Tell watchdog we are running
-
-        drive();
-        if (xboxDriver.getBtnB()) {
-            driveLeftE.reset();
-        }
-        // Printing to console to get encoder data (here for debugging Jan 25)
-        System.out.println(driveLeftE.get() + "     " + driveLeftE.getDistance() + "      " 
-                + driveLeftE.getRaw() + "       " + driveLeftE.getDirection() + "       "
-                + driveLeftE.getRate());
     }
 
     /**
-     * Maps all the various drive functions to buttons on the driver's xbox controller
+     * Maps all the various drive functions to buttons on the driver's xbox
+     * controller
      */
     public void drive() {
         if (xboxDriver.getBtnA()) {
             df.holdPosition(0);
-        } 
-        if (!df.isHoldingPosition()){
+        }
+        if (xboxDriver.getBtnX()) {
             df.notHoldingPosition();
-            
+        }
+        if (!df.isHoldingPosition()) {
             if (xboxDriver.getBtnL3()) {
                 df.toggleControlFlip();
             }

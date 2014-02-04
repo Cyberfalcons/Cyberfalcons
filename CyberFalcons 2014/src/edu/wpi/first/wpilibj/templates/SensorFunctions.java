@@ -15,6 +15,7 @@ import edu.wpi.first.wpilibj.Encoder;
 public class SensorFunctions {
     
     final int exampleVal = 500;
+    int[] shotPowerValue;
     int shotReadyValue;
     
     DigitalInput ardUltra;
@@ -39,7 +40,8 @@ public class SensorFunctions {
 //        exampleEnc = new Encoder(9001,9001); // is example only
         neckPot = np;
         winchPot = wp;
-        shotReadyValue = VariableMap.SHOT_READY_VALUE;
+        shotPowerValue = VariableMap.SHOT_POWER_VALUES;
+        shotReadyValue = shotPowerValue[0];
         driveLeftE = dl;
         driveRightE = dr;
     }
@@ -55,6 +57,14 @@ public class SensorFunctions {
     
     public int getNeckPot() {
         return neckPot.getValue();
+    }
+    
+    /**
+     *  Allows the selection of a preset power for shooting
+     * @param value - the preset value to choose
+     */
+    public void setShotReadyValue(int value) {
+        shotReadyValue = shotPowerValue[value];
     }
     
     public boolean shotReady() {

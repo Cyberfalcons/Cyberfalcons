@@ -19,10 +19,14 @@ public class DriveFunctions {
     final double DEADZONE;
     // PID Controller
     PIDController pidCL;
+    PIDController pidCL2;
     PIDController pidCR;
+    PIDController pidCR2;
     // Drive motors
     /*Talon*/Jaguar driveRight;
+    /*Talon*/Jaguar driveRight2;
     /*Talon*/Jaguar driveLeft;
+    /*Talon*/Jaguar driveLeft2;
     // Shifting Solenoids
     Solenoid shift1;
     Solenoid shift2;
@@ -45,10 +49,12 @@ public class DriveFunctions {
      * @param cf - the control flip variable
      * @param dz - the joystick Dead-zone
      */
-    public DriveFunctions(/*Talon*/Jaguar dr, /*Talon*/Jaguar dl, Encoder drE, Encoder dlE, Solenoid s1, 
+    public DriveFunctions(/*Talon*/Jaguar dr, /*Talon*/Jaguar dr2, /*Talon*/Jaguar dl, /*Talon*/Jaguar dl2, Encoder drE, Encoder dlE, Solenoid s1, 
             Solenoid s2, SensorFunctions sFunctions) {
         driveRight = dr;
+        driveRight2 = dr2;
         driveLeft = dl;
+        driveLeft2 = dl2;
         driveRightE = drE;
         driveLeftE = dlE;
         shift1 = s1;
@@ -59,7 +65,9 @@ public class DriveFunctions {
         sf = sFunctions;
         holdingPosition = false;
         pidCL = new PIDController(1,1,0,driveLeftE,driveLeft);
+        pidCL2 = new PIDController(1,1,0,driveLeftE,driveLeft2);
         pidCR = new PIDController(1,1,0,driveRightE,driveRight);
+        pidCR2 = new PIDController(1,1,0,driveRightE,driveRight2);
     }
 
     public void resetDriveSystem() {
@@ -84,6 +92,7 @@ public class DriveFunctions {
         } else {
             driveLeft.set(0);
         }
+        driveLeft2.set(driveLeft.get());
     }
 
     /**
@@ -101,6 +110,7 @@ public class DriveFunctions {
         } else {
             driveRight.set(0);
         }
+        driveRight2.set(driveRight.get());
     }
 
     /**
@@ -131,18 +141,24 @@ public class DriveFunctions {
         if (!pidCL.isEnable()) {
             driveLeftE.reset();
             pidCL.enable();
+            pidCL2.enable();
         }
         if (!pidCR.isEnable()) {
             driveRightE.reset();
             pidCR.enable();
+            pidCR2.enable();
         }
         pidCL.setSetpoint(position);
+        pidCL2.setSetpoint(position);
         pidCR.setSetpoint(position);
+        pidCR2.setSetpoint(position);
     }
     
     public void notHoldingPosition() {
         pidCL.disable();
+        pidCL2.disable();
         pidCR.disable();
+        pidCR2.disable();
     }
     
     public boolean isHoldingPosition() {

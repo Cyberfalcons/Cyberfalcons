@@ -8,13 +8,15 @@ public class VariableMap{
      */
     public static double DEADZONE = 0.1;
     public static int[] SHOT_POT_VALUES = {1, 2, 3, 4, 5};
-    public static int SHOT_READY_VALUE = 324;
+    public static int[] SHOT_POWER_VALUES = {1, 2, 3, 4, 5};
     //PWM
     public static int PWM_DRIVERIGHT = 1;
-    public static int PWM_DRIVELEFT = 2;
-    public static int PWM_PICKUP_PIVOT = 3;
-    public static int PWM_ROLLER = 4;
-    public static int PWM_LAUNCHER = 5;
+    public static int PWM_DRIVERIGHT2 = 2;
+    public static int PWM_DRIVELEFT = 3;
+    public static int PWM_DRIVELEFT2 = 4;
+    public static int PWM_PICKUP_PIVOT = 5;
+    public static int PWM_ROLLER = 6;
+    public static int PWM_LAUNCHER = 7;
     //Solonoids
     public static int SOLO_DRIVE_LEFT = 1;
     public static int SOLO_DRIVE_RIGHT = 2;
