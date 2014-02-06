@@ -10,11 +10,11 @@ import edu.wpi.first.wpilibj.Victor;
 
 /**
  *
- * @author Rafael
+ * @author Rafael & Nathan Hicks
  */
 public class PickupFunctions {
 
-    // Neck Motor (Victor)
+    // Pickup Pivot Motor (Victor)
     Victor neck;
     // Jaw Roller Motor (Spike)
     Relay roller;
@@ -23,9 +23,6 @@ public class PickupFunctions {
     Solenoid jawClose;
     // Sensor Functions
     SensorFunctions sFunctions;
-    // Operation Variables
-    int frontLoadPos;
-    int backLoadPos;
 
     // CONSTRUCTOR METHOD 
     /**
@@ -35,21 +32,17 @@ public class PickupFunctions {
      * @param jo = piston that opens the jaw
      * @param jc = piston that closes the jaw
      * @param sf = sensor class that sends info to robot
-     * @param fPos = integer that defines the front load position
-     * @param bPos = integer that defines the back load position
      */
-    public PickupFunctions(Victor n, Relay r, Solenoid jo, Solenoid jc, SensorFunctions sf, int fPos, int bPos) {
+    public PickupFunctions(Victor n, Relay r, Solenoid jo, Solenoid jc, SensorFunctions sf) {
         neck = n;
         roller = r;
         jawOpen = jo;
         jawClose = jc;
         sFunctions = sf;
-        frontLoadPos = fPos;
-        backLoadPos = bPos;
     }
 
     public void frontPickUp() {
-        if (sFunctions.getNeckPot() < frontLoadPos) {
+        if (!sFunctions.neckInFrontLoadPosition()) {
             neck.set(1);
         } else {
             neck.set(0); // Set to hold position using PID
@@ -62,7 +55,7 @@ public class PickupFunctions {
 
     public void backPickUp() {
         stopJawPistons();
-        if (sFunctions.getNeckPot() > backLoadPos) {
+        if (!sFunctions.neckInBackLoadPosition()) {
             neck.set(-1);
         } else {
             neck.set(0); //Set to the hold position using PID

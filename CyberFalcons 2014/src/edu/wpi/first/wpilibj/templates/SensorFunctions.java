@@ -10,7 +10,7 @@ import edu.wpi.first.wpilibj.Encoder;
 
 /**
  *
- * @author Alex
+ * @author Alex & Nathan Hicks
  */
 public class SensorFunctions {
     
@@ -21,8 +21,8 @@ public class SensorFunctions {
     DigitalInput ardUltra;
     AnalogChannel neckPot;
     AnalogChannel winchPot;
-    Encoder driveLeftE;
-    Encoder driveRightE;
+//    Encoder driveLeftE;
+//    Encoder driveRightE;
     AnalogChannel examplePot; // is example only
     Encoder exampleEnc; // is example only
     
@@ -34,7 +34,7 @@ public class SensorFunctions {
      * @param dl - left drive encoder
      * @param dr - right drive encoder
      */
-    public SensorFunctions(AnalogChannel np, AnalogChannel wp, Encoder dl, Encoder dr) {
+    public SensorFunctions(AnalogChannel np, AnalogChannel wp/*, Encoder dl, Encoder dr*/) {
 //        ardUltra = new DigitalInput(1,9001); // REPLACE WITH MAP THINGS
 //        examplePot = new AnalogChannel(1,9001); // is example only
 //        exampleEnc = new Encoder(9001,9001); // is example only
@@ -42,8 +42,8 @@ public class SensorFunctions {
         winchPot = wp;
         shotPowerValue = VariableMap.SHOT_POWER_VALUES;
         shotReadyValue = shotPowerValue[0];
-        driveLeftE = dl;
-        driveRightE = dr;
+//        driveLeftE = dl;
+//        driveRightE = dr;
     }
     
     public boolean isBallOnUltraSound() {
@@ -59,6 +59,20 @@ public class SensorFunctions {
         return neckPot.getValue();
     }
     
+    public boolean neckInFrontLoadPosition() {
+        if (getNeckPot() > VariableMap.FRONT_LOAD_POS) {
+            return true;
+        }
+        return false;
+    }
+    
+    public boolean neckInBackLoadPosition() {
+        if (getNeckPot() > VariableMap.BACK_LOAD_POS) {
+            return true;
+        }
+        return false;
+    }
+    
     /**
      *  Allows the selection of a preset power for shooting
      * @param value - the preset value to choose
@@ -71,18 +85,18 @@ public class SensorFunctions {
         return winchPot.getValue() > shotReadyValue;
     }
     
-    public double getLeftDriveEncoder() {
-        return driveLeftE.getDistance();
-    }
-    
-    public double getRightDriveEncoder() {
-        return driveRightE.getDistance();
-    }
-    
-    public void zeroDriveEncoders() {
-        driveLeftE.reset();
-        driveRightE.reset();
-    }
+//    public double getLeftDriveEncoder() {
+//        return driveLeftE.getDistance();
+//    }
+//    
+//    public double getRightDriveEncoder() {
+//        return driveRightE.getDistance();
+//    }
+//    
+//    public void zeroDriveEncoders() {
+//        driveLeftE.reset();
+//        driveRightE.reset();
+//    }
     
     // example of pot boolean
     public boolean pastLimit() {

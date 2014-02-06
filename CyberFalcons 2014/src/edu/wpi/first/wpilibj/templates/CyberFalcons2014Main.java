@@ -7,7 +7,6 @@
 package edu.wpi.first.wpilibj.templates;
 
 import edu.wpi.first.wpilibj.*;
-import edu.wpi.first.wpilibj.CounterBase.EncodingType;
 
 /**
  * The VM is configured to automatically run this class, and to call the
@@ -21,30 +20,43 @@ public class CyberFalcons2014Main extends IterativeRobot {
     // Functions
     DriveFunctions df;
     SensorFunctions sf;
+    ShootingFunctions shf;
+    PickupFunctions pf;
     // Xbox controllers
     XBoxController xboxDriver;
+    XBoxController xboxOperator;
+    // Compressor
+    Compressor airCompressor;
     // Drive motors
-    /*Talon*/
-    Jaguar talonDriveRight;
-    /*Talon*/
-    Jaguar talonDriveRight2;
-    /*Talon*/
-    Jaguar talonDriveLeft;
-    /*Talon*/
-    Jaguar talonDriveLeft2;
+    Talon talonDriveRight;
+    Talon talonDriveRight2;
+    Talon talonDriveLeft;
+    Talon talonDriveLeft2;
     // Gear shifter
     Solenoid shifter1;
     Solenoid shifter2;
     // Drive encoders
-    Encoder driveLeftE;
-    Encoder driveRightE;
+//    Encoder driveLeftE;
+//    Encoder driveRightE;
+    // Pickup Pivot Motor
+    Victor neck;
+    // Jaw Solenoids
+    Solenoid openJaw;
+    Solenoid closeJaw;
+    // Shooting Solenoids
+    Solenoid fire;
+    Solenoid resetFire;
+    // Shooter Winch
+    Relay winch;
+    // Pickup Roller
+    Relay roller;
     // Sensors
     AnalogChannel neckPot;
     AnalogChannel winchPot;
     // Operation Variables
     boolean teleopActive = false;
-    
-    DigitalInput testSwitch;
+    boolean pickingUp = false;
+    boolean pickingFront = true;
 
     /**
      * This function is run when the robot is first started up and should be
@@ -54,32 +66,40 @@ public class CyberFalcons2014Main extends IterativeRobot {
 
         // Xbox Controllers
         xboxDriver = new XBoxController(1); // USB port 1
-
+        xboxOperator = new XBoxController(2); // USB port 2
+        // Compressor
+        airCompressor = new Compressor(VariableMap.DIO_COMPRESSOR,VariableMap.SPIKE_COMPRESSOR);
+        airCompressor.start();
         // Drive Motors
-        talonDriveRight = new /*Talon*/ Jaguar(/*cRIO slot*/1, VariableMap.PWM_DRIVERIGHT);
-        talonDriveRight2 = new /*Talon*/ Jaguar(/*cRIO slot*/1, VariableMap.PWM_DRIVERIGHT2);
-        talonDriveLeft = new /*Talon*/ Jaguar(/*cRIO slot*/1, VariableMap.PWM_DRIVELEFT);
-        talonDriveLeft2 = new /*Talon*/ Jaguar(/*cRIO slot*/1, VariableMap.PWM_DRIVELEFT2);
+        talonDriveRight = new Talon(/*cRIO slot*/1, VariableMap.PWM_DRIVERIGHT);
+        talonDriveRight2 = new Talon(/*cRIO slot*/1, VariableMap.PWM_DRIVERIGHT2);
+        talonDriveLeft = new Talon(/*cRIO slot*/1, VariableMap.PWM_DRIVELEFT);
+        talonDriveLeft2 = new Talon(/*cRIO slot*/1, VariableMap.PWM_DRIVELEFT2);
         // Gear shifter
-        shifter1 = new Solenoid(/*cRIO slot*/1, /*channel*/ VariableMap.SOLO_DRIVE_LEFT);
-        shifter2 = new Solenoid(/*cRIO slot*/1, /*channel*/ VariableMap.SOLO_DRIVE_RIGHT);
+        shifter1 = new Solenoid(/*cRIO slot*/1, /*channel*/ VariableMap.SOLO_SHIFT_LOW);
+        shifter2 = new Solenoid(/*cRIO slot*/1, /*channel*/ VariableMap.SOLO_SHIFT_HIGH);
         // Drive Encoders
-        driveRightE = new Encoder(VariableMap.DIO_ENCODER_RIGHT_A, VariableMap.DIO_ENCODER_RIGHT_B,  true, EncodingType.k4X);
-        driveLeftE = new Encoder(VariableMap.DIO_ENCODER_LEFT_A, VariableMap.DIO_ENCODER_LEFT_B, false, EncodingType.k4X);
+//        driveRightE = new Encoder(VariableMap.DIO_ENCODER_RIGHT_A, VariableMap.DIO_ENCODER_RIGHT_B,  true, EncodingType.k4X);
+//        driveLeftE = new Encoder(VariableMap.DIO_ENCODER_LEFT_A, VariableMap.DIO_ENCODER_LEFT_B, false, EncodingType.k4X);
 //        driveLeftE.setDistancePerPulse(5);
-        driveLeftE.setMaxPeriod(5);
-        driveLeftE.setMinRate(0.001);
+//        driveLeftE.setMaxPeriod(5);
+//        driveLeftE.setMinRate(0.001);
 //        driveLeftE.stop();
-        driveRightE.start();
-        driveLeftE.start();
+//        driveRightE.start();
+//        driveLeftE.start();
 //        driveRightE.reset();
 //        driveLeftE.reset();
+        // Pickup Pivot
+//        neck = new Victor(/*cRIO slot*/1, VariableMap.PWM_PICKUP_PIVOT);
         // Sensors
 //        neckPot = new AnalogChannel(/*cRIO slot*/1, /*channel*/ 8);
 
-        sf = new SensorFunctions(neckPot, winchPot, driveLeftE, driveRightE);
-        df = new DriveFunctions(talonDriveRight, talonDriveRight2, talonDriveLeft, talonDriveLeft2, 
-                driveRightE, driveLeftE, shifter1, shifter2, sf);
+        sf = new SensorFunctions(neckPot, winchPot/*, driveLeftE, driveRightE*/);
+        df = new DriveFunctions(talonDriveRight, talonDriveRight2, talonDriveLeft, talonDriveLeft2,
+                /*driveRightE, driveLeftE,*/ shifter1, shifter2, sf);
+        shf = new ShootingFunctions(neck, winch, openJaw, closeJaw, fire,
+                resetFire, sf);
+        pf = new PickupFunctions(neck, roller, openJaw, closeJaw, sf);
 
     }
 
@@ -106,9 +126,7 @@ public class CyberFalcons2014Main extends IterativeRobot {
         if (df.controlFlip) {
             df.toggleControlFlip();
         }
-        driveLeftE.stop();
-        driveLeftE.reset();
-        driveLeftE.start();
+//        shf.resetShootingSystem();
     }
 
     /**
@@ -116,47 +134,35 @@ public class CyberFalcons2014Main extends IterativeRobot {
      */
     public void teleopPeriodic() {
         // Tell watchdog we are running
-//        Watchdog.getInstance().feed();
-//
-//        // Activate the robot by pushing start button
-//        if (xboxDriver.getBtnSTART()) {
-//            teleopActive = true;
-//        }
-//        if (!teleopActive) {
-//            // Only run if teleop has been active
-//            return;
-//        }
-//
-//        drive();
-        
-        
-        Watchdog.getInstance().feed(); // Tell watchdog we are running
+        Watchdog.getInstance().feed();
+
+        // Activate the robot by pushing start button
+        if (xboxDriver.getBtnSTART()) {
+            teleopActive = true;
+        }
+        if (!teleopActive) {
+            // Only run if teleop has been active
+            return;
+        }
 
         drive();
-        if (xboxDriver.getBtnB()) {
-//            System.out.println("Resetting the encoder");
-            driveLeftE.reset();
-        }
-        // Printing to console to get encoder data (here for debugging Jan 25)
-        System.out.println(driveLeftE.get() + "     " + driveLeftE.getDistance() + "      "
-                + driveLeftE.getRaw() + "       " + driveLeftE.getDirection() + "       "
-                + driveLeftE.getRate() +"\tI think I\'m stopped?: " +driveLeftE.getStopped() );
+//        ballManipulator();
     }
-    
-    
-    
 
     /**
      * This function is called at the start of test
      */
     public void testInit() {
         df.resetDriveSystem();
+//        shf.resetShootingSystem();
     }
 
     /**
      * This function is called periodically during test mode
      */
     public void testPeriodic() {
+        drive();
+//        ballManipulator();
     }
 
     /**
@@ -164,27 +170,66 @@ public class CyberFalcons2014Main extends IterativeRobot {
      * controller
      */
     public void drive() {
+//        if (xboxDriver.getBtnBACK()) {
+//            df.holdPosition(0);
+//        }
+//        if (xboxDriver.getBtnSTART()) {
+//            df.notHoldingPosition();
+//        }
+//        if (!df.isHoldingPosition()) {
+        if (xboxDriver.getBtnL3()) {
+            df.toggleControlFlip();
+        }
+
+        if (xboxDriver.getBtnRB()) {
+            df.shiftLow();
+        } else if (xboxDriver.getBtnLB()) {
+            df.shiftHigh();
+        } else {
+            df.notShifting();
+        }
+
+        df.setDriveRight(xboxDriver.getRightY());
+        df.setDriveLeft(xboxDriver.getLeftY());
+//        }
+    }
+
+    /**
+     * Maps all the various shooting and pickup functions to buttons on the
+     * driver's and the operator's xbox controller
+     */
+    public void ballManipulator() {
+        // Pickup
         if (xboxDriver.getBtnA()) {
-            df.holdPosition(0);
+            pickingUp = true;
+            pickingFront = true;
+        } else if (xboxDriver.getBtnB()) {
+            pickingUp = true;
+            pickingFront = false;
+        } else if (xboxDriver.getBtnY()) {
+            pickingUp = false;
         }
-        if (xboxDriver.getBtnX()) {
-            df.notHoldingPosition();
-        }
-        if (!df.isHoldingPosition()) {
-            if (xboxDriver.getBtnL3()) {
-                df.toggleControlFlip();
-            }
-
-            if (xboxDriver.getBtnRB()) {
-                df.shiftLow();
-            } else if (xboxDriver.getBtnLB()) {
-                df.shiftHigh();
+        if (pickingUp) {
+            if (pickingFront) {
+                pf.frontPickUp();
             } else {
-                df.notShifting();
+                pf.backPickUp();
             }
-
-            df.setDriveRight(xboxDriver.getRightY());
-            df.setDriveLeft(xboxDriver.getLeftY());
+        } else {
+            pf.turnRollerOff();
+            pickingUp = false;
+        }
+        // Shooting
+        if (!pickingUp) {
+            shf.manualAim(xboxOperator.getLeftY());
+        }
+        // Manual Jaw Management
+        if (xboxOperator.getBtnBACK()) {
+            pf.setJawClose();
+        } else if (xboxOperator.getBtnSTART()) {
+            pf.setJawOpen();
+        } else {
+            pf.stopJawPistons();
         }
     }
 }
