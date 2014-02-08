@@ -169,7 +169,7 @@ public class DriveFunctions {
 //    }
     
     /**
-     * Switches the direction that is forward.
+     * Switches the direction that is forward for driving.
      */
     public void toggleControlFlip() {
         if (controlFlipClean) {

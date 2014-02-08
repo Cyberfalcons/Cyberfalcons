@@ -65,6 +65,26 @@ public class XBoxController extends Joystick {
     public boolean getBtnR3() {
         return getRawButton(10);
     }
+    
+    /**
+     * Right Trigger converted to a button.
+     */
+    public boolean getRightTrigger() {
+        if (getTriggers() < -.1) {
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Left Trigger converted to a button.
+     */
+    public boolean getLeftTrigger() {
+        if (getTriggers() > .1) {
+            return true;
+        }
+        return false;
+    }
 
     /**
      * ******** AXIS **************
@@ -105,7 +125,7 @@ public class XBoxController extends Joystick {
     public double getTriggers() {
         return getRawAxis(3);
     }
-
+    
     /**
      * For some reason the D-pad registers as an axis, not a button and only the
      * x-axis shows up. We have no way of using the D-pad y-axis.

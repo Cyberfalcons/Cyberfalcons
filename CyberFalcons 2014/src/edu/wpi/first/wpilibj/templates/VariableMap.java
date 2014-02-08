@@ -17,19 +17,24 @@ public class VariableMap{
     public static int PWM_DRIVELEFT = 3;
     public static int PWM_DRIVELEFT2 = 4;
     public static int PWM_PICKUP_PIVOT = 5;
-    public static int PWM_ROLLER = 6;
-    public static int PWM_LAUNCHER = 7;
+    public static int PWM_SHOOTER_WINCH = 6;
     //Relays
-    public static int SPIKE_COMPRESSOR = 1;
+    public static int SPIKE_COMPRESSOR = 8;
+    public static int SPIKE_ROLLER = 2;
     //Solonoids
     public static int SOLO_SHIFT_LOW = 1;
     public static int SOLO_SHIFT_HIGH = 2;
-    public static int SOLO_LAUNCHER = 3;
-    public static int SOLO_JAW = 4;
+    public static int SOLO_FIRE_SHOOTER = 3;
+    public static int SOLO_RESET_SHOOTER = 4;
+    public static int SOLO_JAW_OPEN = 5;
+    public static int SOLO_JAW_CLOSE = 6;
     //Digital IO
     public static int DIO_COMPRESSOR = 1;
     public static int DIO_ENCODER_RIGHT_A = 2;
     public static int DIO_ENCODER_RIGHT_B = 3;
     public static int DIO_ENCODER_LEFT_A = 4;
     public static int DIO_ENCODER_LEFT_B = 5;
+    // Analog
+    public static int ANALOG_NECK_POT = 1;
+    public static int ANALOG_WINCH_POT = 2;
 }
