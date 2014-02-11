@@ -4,7 +4,8 @@
  */
 package edu.wpi.first.wpilibj.templates;
 
-import edu.wpi.first.wpilibj.Relay;
+import edu.wpi.first.wpilibj.AnalogChannel;
+import edu.wpi.first.wpilibj.PIDController;
 import edu.wpi.first.wpilibj.Solenoid;
 import edu.wpi.first.wpilibj.Victor;
 
@@ -17,10 +18,14 @@ public class ShootingFunctions {
     final double DEADZONE;
     boolean shotFired;
     boolean fireCalled;
+    // PID Controller for autoshots
+    PIDController neckController;
     // Pickup Pivot Motor
     Victor neck;
+    // Neck Potentiometer
+    AnalogChannel neckPot;
     // Kicker Winding Motor
-    Relay winch;
+    Victor winch;
     // Jaw Pistons
     Solenoid openJaw;
     Solenoid closeJaw;
@@ -31,7 +36,7 @@ public class ShootingFunctions {
     SensorFunctions sf;
 
     /**
-     * 
+     *
      * @param n - the victor that controls the neck
      * @param w - the spike that controls the shooter winch
      * @param o - the solenoid to open the jaw
@@ -40,8 +45,8 @@ public class ShootingFunctions {
      * @param r - the solenoid to reset the shooter
      * @param sFunctions - the class to get sensor data from
      */
-    public ShootingFunctions(Victor n, Relay w, Solenoid o, Solenoid c, Solenoid f,
-            Solenoid r, SensorFunctions sFunctions) {
+    public ShootingFunctions(Victor n, Victor w, Solenoid o, Solenoid c, Solenoid f,
+            Solenoid r, AnalogChannel np, SensorFunctions sFunctions) {
         neck = n;
         winch = w;
         openJaw = o;
@@ -50,14 +55,17 @@ public class ShootingFunctions {
         resetFire = r;
         potShotValue = VariableMap.SHOT_POT_VALUES;
         DEADZONE = VariableMap.DEADZONE;
+        neckPot = np;
         sf = sFunctions;
         shotFired = false;
         fireCalled = false;
+        
+        neckController = new PIDController(1,1,0, neckPot, neck);
     }
-    
+
     public void resetShootingSystem() {
         neck.set(0);
-        winch.set(Relay.Value.kOff);
+        winch.set(0);
         openJaw.set(false);
         closeJaw.set(false);
         fire.set(false);
@@ -102,9 +110,9 @@ public class ShootingFunctions {
             resetFire.set(false);
             fire.set(false);
             if (sf.shotReady()) {
-                winch.set(Relay.Value.kOff);
+                winch.set(0);
             } else {
-                winch.set(Relay.Value.kOn);
+                winch.set(1);
             }
         }
         if (fireCalled) {
@@ -115,11 +123,18 @@ public class ShootingFunctions {
 
     /**
      * Manually aims the pickup/shooter
+     *
      * @param direction - a value from -1 to 1
      */
     public void manualAim(double direction) {
         if (direction < -DEADZONE || direction > DEADZONE) {
-            neck.set(direction);
+            if (direction < 0 && !sf.neckPastMax()) { // only allows backwords movement when not past farthest position
+                neck.set(direction);
+            } else if (direction > 0 && !sf.neckPastMin()) { // only allows forward movement when not past closest position
+                neck.set(direction);
+            } else {
+                holdNeckPosition();
+            }
         } else {
             holdNeckPosition();
         }

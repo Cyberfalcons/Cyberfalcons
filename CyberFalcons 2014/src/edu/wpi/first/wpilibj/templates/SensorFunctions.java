@@ -30,16 +30,15 @@ public class SensorFunctions {
      * 
      * @param np - potentiometer for the neck
      * @param wp - potentiometer for the winch
-     * @param srv - shot ready value
-     * @param dl - left drive encoder
-     * @param dr - right drive encoder
+     * @param u - the ultrasound sensor
      */
-    public SensorFunctions(AnalogChannel np, AnalogChannel wp/*, Encoder dl, Encoder dr*/) {
+    public SensorFunctions(AnalogChannel np, AnalogChannel wp, DigitalInput u/*, Encoder dl, Encoder dr*/) {
 //        ardUltra = new DigitalInput(1,9001); // REPLACE WITH MAP THINGS
 //        examplePot = new AnalogChannel(1,9001); // is example only
 //        exampleEnc = new Encoder(9001,9001); // is example only
         neckPot = np;
         winchPot = wp;
+        ardUltra = u;
         shotPowerValue = VariableMap.SHOT_POWER_VALUES;
         shotReadyValue = shotPowerValue[0];
 //        driveLeftE = dl;
@@ -60,7 +59,7 @@ public class SensorFunctions {
     }
     
     public boolean neckInFrontLoadPosition() {
-        if (getNeckPot() > VariableMap.FRONT_LOAD_POS) {
+        if (getNeckPot() < VariableMap.FRONT_LOAD_POS) {
             return true;
         }
         return false;
@@ -73,6 +72,21 @@ public class SensorFunctions {
         return false;
     }
     
+    /**
+     * Returns true if neck cannot move back any farther
+     * @return 
+     */
+    public boolean neckPastMin() {
+        return getNeckPot() < VariableMap.BACK_LOAD_POS;
+    }
+    
+    /**
+     * Returns false if neck cannot move forward any farther
+     * @return 
+     */
+    public boolean neckPastMax() {
+        return getNeckPot() > VariableMap.FRONT_LOAD_POS;
+    }
     /**
      *  Allows the selection of a preset power for shooting
      * @param value - the preset value to choose

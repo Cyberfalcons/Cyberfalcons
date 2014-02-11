@@ -87,12 +87,12 @@ public class DriveFunctions {
             if (controlFlip) {
                 driveLeft.set(power);
             } else {
-                driveLeft.set(-power);
+                driveRight.set(power);
             }
         } else {
             driveLeft.set(0);
         }
-        driveLeft2.set(driveLeft.get());
+        driveLeft2.set(-driveLeft.get());
     }
 
     /**
@@ -105,7 +105,7 @@ public class DriveFunctions {
             if (controlFlip) {
                 driveRight.set(-power);
             } else {
-                driveRight.set(power);
+                driveLeft.set(-power);
             }
         } else {
             driveRight.set(0);
@@ -175,8 +175,10 @@ public class DriveFunctions {
         if (controlFlipClean) {
             controlFlipClean = false;
             controlFlip = !controlFlip;
-        } else {
-            controlFlipClean = true;
         }
+    }
+    
+    public void controlFlipButtonReleased() {
+        controlFlipClean = true;
     }
 }

@@ -49,16 +49,23 @@ public class CyberFalcons2014Main extends IterativeRobot {
     Solenoid fire;
     Solenoid resetFire;
     // Shooter Winch
-    Relay winch;
+    Victor winch;
     // Pickup Roller
-    Relay roller;
+    Victor roller;
     // Sensors
     AnalogChannel neckPot;
     AnalogChannel winchPot;
+    DigitalInput ultra;
+    DigitalInput frontLoadLimit;
+    DigitalInput backLoadLimit;
     // Operation Variables
     boolean teleopActive = false;
     boolean pickingUp = false;
     boolean pickingFront = true;
+    boolean autoCatching = false;
+    boolean yClean = true;
+    boolean autoUpright = false;
+    boolean r3Clean = true;
     int currentAutoShot = 0;
 
     /**
@@ -95,7 +102,7 @@ public class CyberFalcons2014Main extends IterativeRobot {
         // Pickup Pivot
         neck = new Victor(/*cRIO slot*/1, VariableMap.PWM_PICKUP_PIVOT);
         // Pickup Roller
-        roller = new Relay(/*cRIO slot*/1, VariableMap.SPIKE_ROLLER);
+        roller = new Victor(/*cRIO slot*/1, VariableMap.PWM_ROLLER);
         // Jaw Solenoids
         openJaw = new Solenoid(/*cRIO slot*/1, VariableMap.SOLO_JAW_OPEN);
         closeJaw = new Solenoid(/*cRIO slot*/1, VariableMap.SOLO_JAW_CLOSE);
@@ -103,17 +110,22 @@ public class CyberFalcons2014Main extends IterativeRobot {
         fire = new Solenoid(/*cRIO slot*/1, VariableMap.SOLO_FIRE_SHOOTER);
         resetFire = new Solenoid(/*cRIO slot*/1, VariableMap.SOLO_RESET_SHOOTER);
         // Shooter winch
-        winch = new Relay(/*cRIO slot*/1, VariableMap.PWM_SHOOTER_WINCH);
+        winch = new Victor(/*cRIO slot*/1, VariableMap.PWM_SHOOTER_WINCH);
         // Sensors
         neckPot = new AnalogChannel(/*cRIO slot*/1, VariableMap.ANALOG_NECK_POT);
         winchPot = new AnalogChannel(/*cRIO slot*/1, VariableMap.ANALOG_WINCH_POT);
+        ultra = new DigitalInput(/*cRIO slot*/1, VariableMap.DIO_ULTRA_SENSOR);
+        frontLoadLimit = new DigitalInput(/*cRIO slot*/1, VariableMap.DIO_FRONT_LIMIT);
+        backLoadLimit = new DigitalInput(/*cRIO slot*/1, VariableMap.DIO_BACK_LIMIT);
 
-        sf = new SensorFunctions(neckPot, winchPot/*, driveLeftE, driveRightE*/);
+        sf = new SensorFunctions(neckPot, winchPot, ultra/*, driveLeftE, driveRightE*/);
         df = new DriveFunctions(talonDriveRight, talonDriveRight2, talonDriveLeft, talonDriveLeft2,
                 /*driveRightE, driveLeftE,*/ shifter1, shifter2, sf);
         shf = new ShootingFunctions(neck, winch, openJaw, closeJaw, fire,
-                resetFire, sf);
-        pf = new PickupFunctions(neck, roller, openJaw, closeJaw, sf);
+                resetFire, neckPot, sf);
+        pf = new PickupFunctions(neck, roller, openJaw, closeJaw, neckPot, sf);
+
+        
 
     }
 
@@ -141,6 +153,8 @@ public class CyberFalcons2014Main extends IterativeRobot {
             df.toggleControlFlip();
         }
         shf.resetShootingSystem();
+        pickingUp = false;
+        autoCatching = false;
     }
 
     /**
@@ -169,6 +183,8 @@ public class CyberFalcons2014Main extends IterativeRobot {
     public void testInit() {
         df.resetDriveSystem();
         shf.resetShootingSystem();
+        autoCatching = false;
+        pickingUp = false;
     }
 
     /**
@@ -177,6 +193,8 @@ public class CyberFalcons2014Main extends IterativeRobot {
     public void testPeriodic() {
         drive();
         ballManipulator();
+
+        System.out.println(neckPot.getValue());
     }
 
     /**
@@ -193,6 +211,8 @@ public class CyberFalcons2014Main extends IterativeRobot {
 //        if (!df.isHoldingPosition()) {
         if (xboxDriver.getBtnL3()) { // driver left thumb click switches forward driving direction
             df.toggleControlFlip();
+        } else {
+            df.controlFlipButtonReleased();
         }
 
         if (xboxDriver.getBtnRB()) { // driver right bumper shifts to low gear
@@ -208,11 +228,34 @@ public class CyberFalcons2014Main extends IterativeRobot {
 //        }
     }
 
+    public void checkForLimitUpdates() {
+        if (frontLoadLimit.get()) {
+            
+        }
+        if (backLoadLimit.get()) {
+            
+        }
+    }
+    
     /**
      * Maps all the various shooting and pickup functions to buttons on the
      * driver's and the operator's xbox controller
      */
     public void ballManipulator() {
+        // Auto Upright toggles on driver right thumb click
+        if (xboxDriver.getBtnR3()) {
+            if (r3Clean) {
+                r3Clean = false;
+                autoUpright = !autoUpright;
+            }
+        } else {
+            r3Clean = true;
+        }
+        if (autoUpright) {
+            pf.moveToUprightPos();
+        } else {
+            pf.freeNeck();
+        }
         // Pickup
         if (xboxDriver.getBtnA()) { // Driver button A starts the frontpickup
             pickingUp = true;
@@ -229,11 +272,11 @@ public class CyberFalcons2014Main extends IterativeRobot {
             } else {
                 pf.backPickUp();
             }
-        } else if (xboxDriver.getBtnX() || xboxOperator.getBtnY()) { // rollers spit ball out when driver holds x or operator holds y
+        } else if (xboxDriver.getBtnX() || xboxOperator.getBtnLB()) { // rollers spit ball out when driver holds x or operator holds left bumper
             pf.moveRollerReverse();
         } else if (xboxOperator.getBtnRB()) { // roller pulls ball in while operator holds right bumper
             pf.moveRollerForward();
-        }else { // shuts off rollers when not picking up
+        } else { // shuts off rollers when not picking up
             pf.turnRollerOff();
         }
         // Shooting
@@ -253,19 +296,29 @@ public class CyberFalcons2014Main extends IterativeRobot {
         } else if (xboxOperator.getBtnX()) { // the current autoshot will be the first angle when the operator presses X
             currentAutoShot = 2;
         }
-        if (xboxOperator.getBtnLB()) {
+        if (xboxOperator.getLeftTrigger()) { // winch will wind to preset 1 when activated if left trigger is pressed by operator
             sf.setShotReadyValue(0);
-        } else if (xboxOperator.getLeftTrigger()) {
+        } else if (xboxOperator.getRightTrigger()) { // winch will wind to preset 1 when activated if right trigger is pressed by operator
             sf.setShotReadyValue(1);
-        } else if (xboxOperator.getRightTrigger()){
-            sf.setShotReadyValue(2);
         }
-        
-        // Manual Jaw Management
+        // Auto Catch Toggle
+        if (xboxOperator.getBtnY()) { // toggles autocatch when y button is pressed by operator
+            if (yClean) {
+                yClean = false;
+                autoCatching = !autoCatching;
+            }
+        } else {
+            yClean = true;
+        }
+        // Jaw Management
         if (xboxOperator.getBtnBACK()) { // operator can close the jaw with back button
             pf.setJawClose();
+            autoCatching = false;
         } else if (xboxOperator.getBtnSTART()) { // operator can open the jaw with start button
             pf.setJawOpen();
+            autoCatching = false;
+        } else if (autoCatching) { // if autocatch is enabled the automatic catching program will run
+            pf.autoCatch();
         } else {
             pf.stopJawPistons();
         }
