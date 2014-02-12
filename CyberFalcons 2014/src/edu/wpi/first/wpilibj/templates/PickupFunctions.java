@@ -28,6 +28,7 @@ public class PickupFunctions {
     AnalogChannel neckPot;
     // Sensor Functions
     SensorFunctions sFunctions;
+    VariableMap vm;
 
     // CONSTRUCTOR METHOD 
     /**
@@ -38,13 +39,14 @@ public class PickupFunctions {
      * @param jc = piston that closes the jaw
      * @param sf = sensor class that sends info to robot
      */
-    public PickupFunctions(Victor n, Victor r, Solenoid jo, Solenoid jc,AnalogChannel np, SensorFunctions sf) {
+    public PickupFunctions(Victor n, Victor r, Solenoid jo, Solenoid jc,AnalogChannel np, SensorFunctions sf, VariableMap vMap) {
         neck = n;
         roller = r;
         jawOpen = jo;
         jawClose = jc;
         neckPot = np;
         sFunctions = sf;
+        vm = vMap;
         neckControl = new PIDController(1,1,0,neckPot,neck);
     }
 
@@ -75,9 +77,9 @@ public class PickupFunctions {
     
     public void moveToUprightPos() {
         stopJawPistons();
-        neckControl.setSetpoint(VariableMap.JAW_UPRIGHT_POS);
+        neckControl.setSetpoint(vm.JAW_UPRIGHT_POS);
         // activate autoneck control if not within 5 ticks of upright position
-        if (Math.abs(sFunctions.getNeckPot() - VariableMap.JAW_UPRIGHT_POS) > 5) {
+        if (Math.abs(sFunctions.getNeckPot() - vm.JAW_UPRIGHT_POS) > 5) {
             neckControl.enable();
         } else {
             freeNeck();
@@ -105,6 +107,7 @@ public class PickupFunctions {
     public void autoCatch() {
         if (sFunctions.isBallOnUltraSound()) {
             setJawClose();
+            vm.autoCatching = false;
         } else {
             setJawOpen();
         }

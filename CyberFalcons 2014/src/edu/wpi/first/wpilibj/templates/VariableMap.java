@@ -1,18 +1,35 @@
 package edu.wpi.first.wpilibj.templates;
 
-public class VariableMap{
+public class VariableMap {
     //Constants
+
     /**
      * Dead-zone tolerance for the joysticks. The keyword 'final' means that
      * this variable can not be assigned to (changed) elsewhere in the code.
      */
     public static double DEADZONE = 0.1;
-    public static int[] SHOT_POT_VALUES = {1, 2, 3};
-    public static int[] SHOT_POWER_VALUES = {1, 2};
-    public static int FRONT_LOAD_POS = 810; // the back + 100
-    public static int BACK_LOAD_POS = 710; // the front - 100
-    public static int JAW_UPRIGHT_POS = BACK_LOAD_POS + 24;
-    
+    public boolean autoCatching;
+    public int[] SHOT_POT_VALUES = {1, 2, 3};
+    public int[] SHOT_POWER_VALUES = {1, 2};
+    public int FRONT_LOAD_POS = 2000; // the back + 100
+    public int BACK_LOAD_POS = 0; // the front - 100
+    public int JAW_UPRIGHT_POS = BACK_LOAD_POS + 24;
+
+    /**
+     * For Initializing the neck so it is free to move until set by hitting limit switch
+     */
+    public void freeNeckValues() {
+        FRONT_LOAD_POS = 2000; // the back + 100
+        BACK_LOAD_POS = 0; // the front - 100
+    }
+
+    /**
+     * Updates all the Neck potentiometer values based on the reading when a
+     * limit switch is pressed
+     *
+     * @param frontLimit true if the limit switch is at the front of the robot
+     * and false if it is at the back
+     */
     public void updateNeckPotValues(SensorFunctions sf, boolean frontLimit) {
         if (frontLimit) {
             FRONT_LOAD_POS = sf.getNeckPot();

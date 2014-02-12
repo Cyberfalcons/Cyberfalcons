@@ -15,9 +15,8 @@ import edu.wpi.first.wpilibj.Encoder;
 public class SensorFunctions {
     
     final int exampleVal = 500;
-    int[] shotPowerValue;
     int shotReadyValue;
-    
+    VariableMap vm;
     DigitalInput ardUltra;
     AnalogChannel neckPot;
     AnalogChannel winchPot;
@@ -32,15 +31,15 @@ public class SensorFunctions {
      * @param wp - potentiometer for the winch
      * @param u - the ultrasound sensor
      */
-    public SensorFunctions(AnalogChannel np, AnalogChannel wp, DigitalInput u/*, Encoder dl, Encoder dr*/) {
+    public SensorFunctions(AnalogChannel np, AnalogChannel wp, DigitalInput u, VariableMap vMap/*, Encoder dl, Encoder dr*/) {
 //        ardUltra = new DigitalInput(1,9001); // REPLACE WITH MAP THINGS
 //        examplePot = new AnalogChannel(1,9001); // is example only
 //        exampleEnc = new Encoder(9001,9001); // is example only
         neckPot = np;
         winchPot = wp;
         ardUltra = u;
-        shotPowerValue = VariableMap.SHOT_POWER_VALUES;
-        shotReadyValue = shotPowerValue[0];
+        vm = vMap;
+        shotReadyValue = vm.SHOT_POWER_VALUES[0];
 //        driveLeftE = dl;
 //        driveRightE = dr;
     }
@@ -59,14 +58,14 @@ public class SensorFunctions {
     }
     
     public boolean neckInFrontLoadPosition() {
-        if (getNeckPot() < VariableMap.FRONT_LOAD_POS) {
+        if (getNeckPot() <= vm.FRONT_LOAD_POS) {
             return true;
         }
         return false;
     }
     
     public boolean neckInBackLoadPosition() {
-        if (getNeckPot() > VariableMap.BACK_LOAD_POS) {
+        if (getNeckPot() >= vm.BACK_LOAD_POS) {
             return true;
         }
         return false;
@@ -77,7 +76,7 @@ public class SensorFunctions {
      * @return 
      */
     public boolean neckPastMin() {
-        return getNeckPot() < VariableMap.BACK_LOAD_POS;
+        return getNeckPot() <= vm.BACK_LOAD_POS;
     }
     
     /**
@@ -85,14 +84,14 @@ public class SensorFunctions {
      * @return 
      */
     public boolean neckPastMax() {
-        return getNeckPot() > VariableMap.FRONT_LOAD_POS;
+        return getNeckPot() >= vm.FRONT_LOAD_POS;
     }
     /**
      *  Allows the selection of a preset power for shooting
      * @param value - the preset value to choose
      */
     public void setShotReadyValue(int value) {
-        shotReadyValue = shotPowerValue[value];
+        shotReadyValue = vm.SHOT_POWER_VALUES[value];
     }
     
     public boolean shotReady() {

@@ -15,7 +15,6 @@ import edu.wpi.first.wpilibj.Victor;
  */
 public class ShootingFunctions {
 
-    final double DEADZONE;
     boolean shotFired;
     boolean fireCalled;
     // PID Controller for autoshots
@@ -32,8 +31,8 @@ public class ShootingFunctions {
     // Kicker Release Pistons
     Solenoid fire;
     Solenoid resetFire;
-    int[] potShotValue;
     SensorFunctions sf;
+    VariableMap vm;
 
     /**
      *
@@ -46,17 +45,16 @@ public class ShootingFunctions {
      * @param sFunctions - the class to get sensor data from
      */
     public ShootingFunctions(Victor n, Victor w, Solenoid o, Solenoid c, Solenoid f,
-            Solenoid r, AnalogChannel np, SensorFunctions sFunctions) {
+            Solenoid r, AnalogChannel np, SensorFunctions sFunctions, VariableMap vMap) {
         neck = n;
         winch = w;
         openJaw = o;
         closeJaw = c;
         fire = f;
         resetFire = r;
-        potShotValue = VariableMap.SHOT_POT_VALUES;
-        DEADZONE = VariableMap.DEADZONE;
         neckPot = np;
         sf = sFunctions;
+        vm = vMap;
         shotFired = false;
         fireCalled = false;
         
@@ -75,9 +73,9 @@ public class ShootingFunctions {
     }
 
     public void autoShot(int shot) {
-        if (sf.getNeckPot() < potShotValue[shot]) {
+        if (sf.getNeckPot() < vm.SHOT_POT_VALUES[shot]) {
             neck.set(1);// needs to be changed for PID
-        } else if (sf.getNeckPot() > potShotValue[shot]) {
+        } else if (sf.getNeckPot() > vm.SHOT_POT_VALUES[shot]) {
             neck.set(-1);// needs to be changed for PID
         } else {
             holdNeckPosition();
@@ -127,7 +125,7 @@ public class ShootingFunctions {
      * @param direction - a value from -1 to 1
      */
     public void manualAim(double direction) {
-        if (direction < -DEADZONE || direction > DEADZONE) {
+        if (direction < -vm.DEADZONE || direction > vm.DEADZONE) {
             if (direction < 0 && !sf.neckPastMax()) { // only allows backwords movement when not past farthest position
                 neck.set(direction);
             } else if (direction > 0 && !sf.neckPastMin()) { // only allows forward movement when not past closest position

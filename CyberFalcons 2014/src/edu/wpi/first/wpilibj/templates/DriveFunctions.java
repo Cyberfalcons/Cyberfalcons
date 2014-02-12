@@ -16,7 +16,6 @@ public class DriveFunctions {
      * Dead-zone tolerance for the joysticks. The keyword 'final' means that
      * this variable can not be assigned to (changed) elsewhere in the code.
      */
-    final double DEADZONE;
     // PID Controller
 //    PIDController pidCL;
 //    PIDController pidCL2;
@@ -35,6 +34,8 @@ public class DriveFunctions {
 //    Encoder driveRightE;
     // Sensor access
     SensorFunctions sf;
+    // Constant Variable Access
+    VariableMap vm;
     // Control Variables
     boolean controlFlip;
     boolean controlFlipClean;
@@ -50,7 +51,7 @@ public class DriveFunctions {
      * @param dz - the joystick Dead-zone
      */
     public DriveFunctions(Talon dr, Talon dr2, Talon dl, Talon dl2, /*Encoder drE, Encoder dlE,*/ Solenoid s1, 
-            Solenoid s2, SensorFunctions sFunctions) {
+            Solenoid s2, SensorFunctions sFunctions, VariableMap vMap) {
         driveRight = dr;
         driveRight2 = dr2;
         driveLeft = dl;
@@ -61,7 +62,7 @@ public class DriveFunctions {
         shift2 = s2;
         controlFlip = false;
         controlFlipClean = true;
-        DEADZONE = VariableMap.DEADZONE;
+        vm = vMap;
         sf = sFunctions;
         holdingPosition = false;
 //        pidCL = new PIDController(1,1,0,driveLeftE,driveLeft);
@@ -83,7 +84,7 @@ public class DriveFunctions {
      * @param power - should be a directly given joystick input
      */
     public void setDriveLeft(double power) {
-        if (power < -DEADZONE || power > DEADZONE) {
+        if (power < -vm.DEADZONE || power > vm.DEADZONE) {
             if (controlFlip) {
                 driveLeft.set(power);
             } else {
@@ -101,7 +102,7 @@ public class DriveFunctions {
      * @param power - should be a directly given joystick input
      */
     public void setDriveRight(double power) {
-        if (power < -DEADZONE || power > DEADZONE) {
+        if (power < -vm.DEADZONE || power > vm.DEADZONE) {
             if (controlFlip) {
                 driveRight.set(-power);
             } else {

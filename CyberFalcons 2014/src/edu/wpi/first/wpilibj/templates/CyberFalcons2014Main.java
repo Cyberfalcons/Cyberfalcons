@@ -20,6 +20,7 @@ import edu.wpi.first.wpilibj.*;
 public class CyberFalcons2014Main extends IterativeRobot {
 
     // Functions
+    VariableMap vm;
     DriveFunctions df;
     SensorFunctions sf;
     ShootingFunctions shf;
@@ -56,13 +57,12 @@ public class CyberFalcons2014Main extends IterativeRobot {
     AnalogChannel neckPot;
     AnalogChannel winchPot;
     DigitalInput ultra;
-    DigitalInput frontLoadLimit;
-    DigitalInput backLoadLimit;
+    DigitalInput frontLimit;
+    DigitalInput backLimit;
     // Operation Variables
     boolean teleopActive = false;
     boolean pickingUp = false;
     boolean pickingFront = true;
-    boolean autoCatching = false;
     boolean yClean = true;
     boolean autoUpright = false;
     boolean r3Clean = true;
@@ -73,12 +73,12 @@ public class CyberFalcons2014Main extends IterativeRobot {
      * used for any initialization code.
      */
     public void robotInit() {
-
+        vm = new VariableMap();
         // Xbox Controllers
         xboxDriver = new XBoxController(1); // USB port 1
         xboxOperator = new XBoxController(2); // USB port 2
         // Compressor
-        airCompressor = new Compressor(VariableMap.DIO_COMPRESSOR, VariableMap.SPIKE_COMPRESSOR);
+        airCompressor = new Compressor(vm.DIO_COMPRESSOR, VariableMap.SPIKE_COMPRESSOR);
         airCompressor.start();
         // Drive Motors
         talonDriveRight = new Talon(/*cRIO slot*/1, VariableMap.PWM_DRIVERIGHT);
@@ -115,17 +115,15 @@ public class CyberFalcons2014Main extends IterativeRobot {
         neckPot = new AnalogChannel(/*cRIO slot*/1, VariableMap.ANALOG_NECK_POT);
         winchPot = new AnalogChannel(/*cRIO slot*/1, VariableMap.ANALOG_WINCH_POT);
         ultra = new DigitalInput(/*cRIO slot*/1, VariableMap.DIO_ULTRA_SENSOR);
-        frontLoadLimit = new DigitalInput(/*cRIO slot*/1, VariableMap.DIO_FRONT_LIMIT);
-        backLoadLimit = new DigitalInput(/*cRIO slot*/1, VariableMap.DIO_BACK_LIMIT);
+        frontLimit = new DigitalInput(/*cRIO slot*/1, VariableMap.DIO_FRONT_LIMIT);
+        backLimit = new DigitalInput(/*cRIO slot*/1, VariableMap.DIO_BACK_LIMIT);
 
-        sf = new SensorFunctions(neckPot, winchPot, ultra/*, driveLeftE, driveRightE*/);
+        sf = new SensorFunctions(neckPot, winchPot, ultra, vm/*, driveLeftE, driveRightE*/);
         df = new DriveFunctions(talonDriveRight, talonDriveRight2, talonDriveLeft, talonDriveLeft2,
-                /*driveRightE, driveLeftE,*/ shifter1, shifter2, sf);
+                /*driveRightE, driveLeftE,*/ shifter1, shifter2, sf, vm);
         shf = new ShootingFunctions(neck, winch, openJaw, closeJaw, fire,
-                resetFire, neckPot, sf);
-        pf = new PickupFunctions(neck, roller, openJaw, closeJaw, neckPot, sf);
-
-        
+                resetFire, neckPot, sf, vm);
+        pf = new PickupFunctions(neck, roller, openJaw, closeJaw, neckPot, sf, vm);
 
     }
 
@@ -154,7 +152,8 @@ public class CyberFalcons2014Main extends IterativeRobot {
         }
         shf.resetShootingSystem();
         pickingUp = false;
-        autoCatching = false;
+        vm.freeNeckValues();
+        vm.autoCatching = false;
     }
 
     /**
@@ -183,7 +182,8 @@ public class CyberFalcons2014Main extends IterativeRobot {
     public void testInit() {
         df.resetDriveSystem();
         shf.resetShootingSystem();
-        autoCatching = false;
+        vm.freeNeckValues();
+        vm.autoCatching = false;
         pickingUp = false;
     }
 
@@ -194,7 +194,8 @@ public class CyberFalcons2014Main extends IterativeRobot {
         drive();
         ballManipulator();
 
-        System.out.println(neckPot.getValue());
+        System.out.println("Neck Pot: " + neckPot.getValue() +  "\tUltra: " + sf.isBallOnUltraSound() 
+                + "\tFront Lim: " + frontLimit.get() + "\tBack Lim: " + backLimit.get());
     }
 
     /**
@@ -229,14 +230,14 @@ public class CyberFalcons2014Main extends IterativeRobot {
     }
 
     public void checkForLimitUpdates() {
-        if (frontLoadLimit.get()) {
-            
+        if (!frontLimit.get()) {
+            vm.updateNeckPotValues(sf, true);
         }
-        if (backLoadLimit.get()) {
-            
+        if (!backLimit.get()) {
+            vm.updateNeckPotValues(sf, false);
         }
     }
-    
+
     /**
      * Maps all the various shooting and pickup functions to buttons on the
      * driver's and the operator's xbox controller
@@ -305,7 +306,7 @@ public class CyberFalcons2014Main extends IterativeRobot {
         if (xboxOperator.getBtnY()) { // toggles autocatch when y button is pressed by operator
             if (yClean) {
                 yClean = false;
-                autoCatching = !autoCatching;
+                vm.autoCatching = !vm.autoCatching;
             }
         } else {
             yClean = true;
@@ -313,11 +314,11 @@ public class CyberFalcons2014Main extends IterativeRobot {
         // Jaw Management
         if (xboxOperator.getBtnBACK()) { // operator can close the jaw with back button
             pf.setJawClose();
-            autoCatching = false;
+            vm.autoCatching = false;
         } else if (xboxOperator.getBtnSTART()) { // operator can open the jaw with start button
             pf.setJawOpen();
-            autoCatching = false;
-        } else if (autoCatching) { // if autocatch is enabled the automatic catching program will run
+            vm.autoCatching = false;
+        } else if (vm.autoCatching) { // if autocatch is enabled the automatic catching program will run
             pf.autoCatch();
         } else {
             pf.stopJawPistons();
