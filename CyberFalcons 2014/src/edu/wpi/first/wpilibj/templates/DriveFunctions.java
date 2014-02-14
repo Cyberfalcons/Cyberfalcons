@@ -93,7 +93,19 @@ public class DriveFunctions {
         } else {
             driveLeft.set(0);
         }
-        driveLeft2.set(-driveLeft.get());
+<<<<<<< HEAD
+<<<<<<< HEAD
+        driveLeft2.set(driveLeft.get());
+=======
+        // This correction is for our practice bot mis-built motor, right? 
+        // let's rewire the motor and remove this line so the code is the same in practice and comp bot.
+        driveLeft2.set(-driveLeft.get()); 
+>>>>>>> 7a5db9c9a70f89a4526b5cff55ccfe7f892eff5f
+=======
+        // This correction is for our practice bot mis-built motor, right? 
+        // let's rewire the motor and remove this line so the code is the same in practice and comp bot.
+        driveLeft2.set(-driveLeft.get()); 
+>>>>>>> 7a5db9c9a70f89a4526b5cff55ccfe7f892eff5f
     }
 
     /**

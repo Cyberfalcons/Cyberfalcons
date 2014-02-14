@@ -193,9 +193,10 @@ public class CyberFalcons2014Main extends IterativeRobot {
     public void testPeriodic() {
         drive();
         ballManipulator();
-
-        System.out.println("Neck Pot: " + neckPot.getValue() +  "\tUltra: " + sf.isBallOnUltraSound() 
-                + "\tFront Lim: " + frontLimit.get() + "\tBack Lim: " + backLimit.get());
+        checkForLimitUpdates();
+        winch.set(-Math.abs(xboxOperator.getDpadX()));
+        System.out.println("Neck Pot: " + neckPot.getValue() + "\tMax Pot: " + vm.FRONT_LOAD_POS
+                + "\tFront Lim: " + frontLimit.get() + "\tBack Lim: " + backLimit.get() + "\tMin Pot: " + vm.BACK_LOAD_POS + "\tUpright Pot: " + vm.JAW_UPRIGHT_POS);
     }
 
     /**
@@ -323,5 +324,7 @@ public class CyberFalcons2014Main extends IterativeRobot {
         } else {
             pf.stopJawPistons();
         }
+        // Stay ready to shoot at last set power
+//        shf.readyShot();
     }
 }

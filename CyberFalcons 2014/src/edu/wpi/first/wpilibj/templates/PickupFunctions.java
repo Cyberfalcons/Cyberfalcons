@@ -59,6 +59,7 @@ public class PickupFunctions {
             moveRollerReverse();
             // Open the jaw
             setJawOpen();
+            vm.autoCatching = true;
         }
     }
 
@@ -92,12 +93,12 @@ public class PickupFunctions {
 
     public void moveRollerForward() {
         // Move the roller to eject the ball
-        roller.set(0.5);
+        roller.set(0.6);
     }
 
     public void moveRollerReverse() {
         // Move the roller to suck in the ball
-        roller.set(-0.5);
+        roller.set(-0.6);
     }
 
     public void turnRollerOff() {
