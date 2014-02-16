@@ -50,7 +50,7 @@ public class DriveFunctions {
      * @param cf - the control flip variable
      * @param dz - the joystick Dead-zone
      */
-    public DriveFunctions(Talon dr, Talon dr2, Talon dl, Talon dl2, /*Encoder drE, Encoder dlE,*/ Solenoid s1, 
+    public DriveFunctions(Talon dr, Talon dr2, Talon dl, Talon dl2, /*Encoder drE, Encoder dlE,*/ Solenoid s1,
             Solenoid s2, SensorFunctions sFunctions, VariableMap vMap) {
         driveRight = dr;
         driveRight2 = dr2;
@@ -85,27 +85,15 @@ public class DriveFunctions {
      */
     public void setDriveLeft(double power) {
         if (power < -vm.DEADZONE || power > vm.DEADZONE) {
-            if (controlFlip) {
-                driveLeft.set(power);
+            if (!controlFlip) {
+                driveLeft.set(-power);
             } else {
-                driveRight.set(power);
+                driveRight.set(-power);
             }
         } else {
             driveLeft.set(0);
         }
-<<<<<<< HEAD
-<<<<<<< HEAD
         driveLeft2.set(driveLeft.get());
-=======
-        // This correction is for our practice bot mis-built motor, right? 
-        // let's rewire the motor and remove this line so the code is the same in practice and comp bot.
-        driveLeft2.set(-driveLeft.get()); 
->>>>>>> 7a5db9c9a70f89a4526b5cff55ccfe7f892eff5f
-=======
-        // This correction is for our practice bot mis-built motor, right? 
-        // let's rewire the motor and remove this line so the code is the same in practice and comp bot.
-        driveLeft2.set(-driveLeft.get()); 
->>>>>>> 7a5db9c9a70f89a4526b5cff55ccfe7f892eff5f
     }
 
     /**
@@ -115,10 +103,10 @@ public class DriveFunctions {
      */
     public void setDriveRight(double power) {
         if (power < -vm.DEADZONE || power > vm.DEADZONE) {
-            if (controlFlip) {
-                driveRight.set(-power);
+            if (!controlFlip) {
+                driveRight.set(power);
             } else {
-                driveLeft.set(-power);
+                driveLeft.set(power);
             }
         } else {
             driveRight.set(0);
@@ -149,7 +137,7 @@ public class DriveFunctions {
         shift1.set(false);
         shift2.set(false);
     }
-    
+
 //    public void holdPosition(double position) {
 //        if (!pidCL.isEnable()) {
 //            driveLeftE.reset();
@@ -180,7 +168,6 @@ public class DriveFunctions {
 //        }
 //        return false;
 //    }
-    
     /**
      * Switches the direction that is forward for driving.
      */
@@ -190,7 +177,7 @@ public class DriveFunctions {
             controlFlip = !controlFlip;
         }
     }
-    
+
     public void controlFlipButtonReleased() {
         controlFlipClean = true;
     }

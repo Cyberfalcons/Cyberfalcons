@@ -29,17 +29,21 @@ public class PickupFunctions {
     // Sensor Functions
     SensorFunctions sFunctions;
     VariableMap vm;
+    int pickupEndTimer;
 
     // CONSTRUCTOR METHOD 
     /**
      *
-     * @param n = victor motor that tilts the neck back and forth
-     * @param r = spike motor that spins the jaw roller
-     * @param jo = piston that opens the jaw
-     * @param jc = piston that closes the jaw
-     * @param sf = sensor class that sends info to robot
+     * @param n victor motor that tilts the neck back and forth
+     * @param r spike motor that spins the jaw roller
+     * @param jo piston that opens the jaw
+     * @param jc piston that closes the jaw
+     * @param sf sensor class that sends info to robot
+     * @param vMap the variable map class
+     * @param nc the neck PID controller
      */
-    public PickupFunctions(Victor n, Victor r, Solenoid jo, Solenoid jc,AnalogChannel np, SensorFunctions sf, VariableMap vMap) {
+    public PickupFunctions(Victor n, Victor r, Solenoid jo, Solenoid jc,
+            AnalogChannel np, SensorFunctions sf, VariableMap vMap, PIDController nc) {
         neck = n;
         roller = r;
         jawOpen = jo;
@@ -47,48 +51,64 @@ public class PickupFunctions {
         neckPot = np;
         sFunctions = sf;
         vm = vMap;
-        neckControl = new PIDController(1,1,0,neckPot,neck);
+        neckControl = nc;
     }
 
     public void frontPickUp() {
-        if (!sFunctions.neckInFrontLoadPosition()) {
-            neck.set(-.5);
-        } else {
-            neck.set(0); //hold position thanks to high gear ratio
-            // Spin the rollers to swallow the ball
-            moveRollerReverse();
-            // Open the jaw
-            setJawOpen();
-            vm.autoCatching = true;
+        neckControl.setSetpoint(vm.FRONT_LOAD_POS);
+        vm.neckMoved = true;
+        stopJawPistons();
+        // Spin the rollers to swallow the ball
+        moveRollerForward();
+        if (sFunctions.neckInFrontLoadPosition()) {
+            if (sFunctions.isBallOnUltraSound()) {
+                if (pickupEndTimer < 50) {
+                    vm.autoCatching = true;
+                    pickupEndTimer = 0;
+                    vm.pickingUp = false;
+                } else {
+                    pickupEndTimer++;
+                }
+            } else {
+                // Open the jaw
+                setJawOpen();
+            }
+
         }
     }
 
     public void backPickUp() {
+        neckControl.setSetpoint(vm.BACK_LOAD_POS);
+        vm.neckMoved = true;
         stopJawPistons();
-        if (!sFunctions.neckInBackLoadPosition()) {
-            neck.set(.5);
-        } else {
-            neck.set(0); //hold position thanks to high gear ratio
-            // Spin the rollers to swallow the ball
-            moveRollerReverse();
-            // Close the jaw 
-            setJawClose();
+        // Spin the rollers to swallow the ball
+        moveRollerReverse();
+        if (sFunctions.neckInBackLoadPosition()) {
+            if (sFunctions.isBallOnUltraSound()) {
+                if (pickupEndTimer < 50) {
+                    pickupEndTimer = 0;
+                    vm.pickingUp = false;
+                } else {
+                    pickupEndTimer++;
+                }
+            } else {
+                // Close the jaw 
+                setJawClose();
+            }
         }
     }
-    
+
     public void moveToUprightPos() {
+        vm.autoUpright = true;
+        vm.neckMoved = true;
         stopJawPistons();
         neckControl.setSetpoint(vm.JAW_UPRIGHT_POS);
         // activate autoneck control if not within 5 ticks of upright position
-        if (Math.abs(sFunctions.getNeckPot() - vm.JAW_UPRIGHT_POS) > 5) {
-            neckControl.enable();
+        if (!(sFunctions.getNeckPot() == vm.JAW_UPRIGHT_POS)) {
+            vm.autoUpright = true;
         } else {
-            freeNeck();
+            vm.autoUpright = false;
         }
-    }
-    
-    public void freeNeck() {
-        neckControl.disable();
     }
 
     public void moveRollerForward() {

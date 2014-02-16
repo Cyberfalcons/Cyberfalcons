@@ -7,16 +7,22 @@ public class VariableMap {
      * Dead-zone tolerance for the joysticks. The keyword 'final' means that
      * this variable can not be assigned to (changed) elsewhere in the code.
      */
-    public static double DEADZONE = 0.1;
+    public double DEADZONE = 0.1;
     public boolean autoCatching;
+    public boolean autoUpright;
+    public boolean pickingUp;
+    public boolean pickingFront;
+    public boolean neckMoved;
+    public int currentNeckSetPoint;
     public int[] SHOT_POT_VALUES = {1, 2, 3};
     public int[] SHOT_POWER_VALUES = {1, 2};
-    public int FRONT_LOAD_POS = 2000; // the back + 100
-    public int BACK_LOAD_POS = 0; // the front - 100
-    public int JAW_UPRIGHT_POS = BACK_LOAD_POS + 24;
+    public int FRONT_LOAD_POS = 2000; // the back + 106
+    public int BACK_LOAD_POS = 0; // the front - 106
+    public int JAW_UPRIGHT_POS = BACK_LOAD_POS + 36;
 
     /**
-     * For Initializing the neck so it is free to move until set by hitting limit switch
+     * For Initializing the neck so it is free to move until set by hitting
+     * limit switch
      */
     public void freeNeckValues() {
         FRONT_LOAD_POS = 2000; // the back + 100
@@ -32,14 +38,23 @@ public class VariableMap {
      */
     public void updateNeckPotValues(SensorFunctions sf, boolean frontLimit) {
         if (frontLimit) {
-            FRONT_LOAD_POS = sf.getNeckPot() - 4;
-            BACK_LOAD_POS = FRONT_LOAD_POS - 100;
-            JAW_UPRIGHT_POS = BACK_LOAD_POS + 24;
+            FRONT_LOAD_POS = sf.getNeckPot() - 2;
+            BACK_LOAD_POS = FRONT_LOAD_POS - 106;
+            JAW_UPRIGHT_POS = BACK_LOAD_POS + 36;
         } else {
-            BACK_LOAD_POS = sf.getNeckPot() + 4;
-            FRONT_LOAD_POS = BACK_LOAD_POS + 100;
-            JAW_UPRIGHT_POS = BACK_LOAD_POS + 24;
+            BACK_LOAD_POS = sf.getNeckPot() + 2;
+            FRONT_LOAD_POS = BACK_LOAD_POS + 106;
+            JAW_UPRIGHT_POS = BACK_LOAD_POS + 36;
         }
+    }
+
+    /**
+     * Updates all the Winch potentiometer values based on the reading when a
+     * limit switch is pressed
+     */
+    public void updateWinchPotValues(SensorFunctions sf) {
+        SHOT_POWER_VALUES[0] = sf.getNeckPot() + 5;
+        SHOT_POWER_VALUES[1] = sf.getNeckPot() + 100;
     }
     //PWM
     public static int PWM_DRIVERIGHT = 3;
@@ -63,6 +78,7 @@ public class VariableMap {
     public static int DIO_ULTRA_SENSOR = 2;
     public static int DIO_FRONT_LIMIT = 3;
     public static int DIO_BACK_LIMIT = 4;
+    public static int DIO_WINCH_LIMIT = 5;
 //    public static int DIO_ENCODER_RIGHT_A = 2;
 //    public static int DIO_ENCODER_RIGHT_B = 3;
 //    public static int DIO_ENCODER_LEFT_A = 4;

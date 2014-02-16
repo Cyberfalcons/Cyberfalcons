@@ -36,16 +36,19 @@ public class ShootingFunctions {
 
     /**
      *
-     * @param n - the victor that controls the neck
-     * @param w - the spike that controls the shooter winch
-     * @param o - the solenoid to open the jaw
-     * @param c - the solenoid to close the jaw
-     * @param f - the solenoid to fire the shooter
-     * @param r - the solenoid to reset the shooter
+     * @param n the victor that controls the neck
+     * @param w the spike that controls the shooter winch
+     * @param o the solenoid to open the jaw
+     * @param c the solenoid to close the jaw
+     * @param f the solenoid to fire the shooter
+     * @param r the solenoid to reset the shooter
      * @param sFunctions - the class to get sensor data from
+     * @param vMap the variable map class
+     * @param nc the neck PID controller
      */
     public ShootingFunctions(Victor n, Victor w, Solenoid o, Solenoid c, Solenoid f,
-            Solenoid r, AnalogChannel np, SensorFunctions sFunctions, VariableMap vMap) {
+            Solenoid r, AnalogChannel np, SensorFunctions sFunctions, VariableMap vMap,
+            PIDController nc) {
         neck = n;
         winch = w;
         openJaw = o;
@@ -57,8 +60,7 @@ public class ShootingFunctions {
         vm = vMap;
         shotFired = false;
         fireCalled = false;
-        
-        neckController = new PIDController(1,1,0, neckPot, neck);
+        neckController = nc;
     }
 
     public void resetShootingSystem() {
@@ -73,11 +75,10 @@ public class ShootingFunctions {
     }
 
     public void autoShot(int shot) {
-        if (sf.getNeckPot() < vm.SHOT_POT_VALUES[shot]) {
-            neck.set(1);// needs to be changed for PID
-        } else if (sf.getNeckPot() > vm.SHOT_POT_VALUES[shot]) {
-            neck.set(-1);// needs to be changed for PID
-        } else {
+        vm.currentNeckSetPoint = vm.SHOT_POT_VALUES[shot];
+        neckController.setSetpoint(vm.currentNeckSetPoint);
+        vm.neckMoved = true;
+        if (sf.getNeckPot() == vm.SHOT_POT_VALUES[shot]) {
             holdNeckPosition();
             fireCalled = true;
             readyShot();
@@ -110,7 +111,7 @@ public class ShootingFunctions {
             if (sf.shotReady()) {
                 winch.set(0);
             } else {
-                winch.set(1);
+                winch.set(-1);
             }
         }
         if (fireCalled) {
@@ -118,7 +119,7 @@ public class ShootingFunctions {
             closeJaw.set(false);
         }
     }
-
+    
     /**
      * Manually aims the pickup/shooter
      *
@@ -127,21 +128,39 @@ public class ShootingFunctions {
     public void manualAim(double direction) {
         if (direction < -vm.DEADZONE || direction > vm.DEADZONE) {
             if (direction < 0 && !sf.neckPastMax()) { // only allows backwords movement when not past farthest position
-                neck.set(direction);
+                vm.currentNeckSetPoint = sf.getNeckPot() - (int)(direction*5);
+                if (vm.currentNeckSetPoint > vm.FRONT_LOAD_POS) {
+                    vm.currentNeckSetPoint = vm.FRONT_LOAD_POS;
+                }
+                vm.neckMoved = true;
             } else if (direction > 0 && !sf.neckPastMin()) { // only allows forward movement when not past closest position
-                neck.set(direction);
+                vm.currentNeckSetPoint = sf.getNeckPot() - (int)(direction*5);
+                if (vm.currentNeckSetPoint < vm.BACK_LOAD_POS) {
+                    vm.currentNeckSetPoint = vm.BACK_LOAD_POS;
+                }
+                vm.neckMoved = true;
             } else {
                 holdNeckPosition();
             }
-        } else {
+        } else if (!vm.autoUpright) {
             holdNeckPosition();
         }
+        neckController.setSetpoint(vm.currentNeckSetPoint);
     }
 
     /**
-     * Set's neck to 0. Because of high gear ratio, neck will hold position.
+     * Set's neck to hold current position using PID.
      */
     public void holdNeckPosition() {
-        neck.set(0);
+        if (vm.neckMoved) {
+            vm.currentNeckSetPoint = sf.getNeckPot();
+            vm.neckMoved = false;
+        }
+        if (sf.neckPastMax()) {
+            vm.currentNeckSetPoint = vm.FRONT_LOAD_POS;
+        }
+        if (sf.neckPastMin()) {
+            vm.currentNeckSetPoint = vm.BACK_LOAD_POS;
+        }
     }
 }
