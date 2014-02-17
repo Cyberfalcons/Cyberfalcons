@@ -16,7 +16,7 @@ import edu.wpi.first.wpilibj.Victor;
 public class ShootingFunctions {
 
     boolean shotFired;
-    boolean fireCalled;
+    int cyclesSinceLastShot;
     // PID Controller for autoshots
     PIDController neckController;
     // Pickup Pivot Motor
@@ -33,6 +33,7 @@ public class ShootingFunctions {
     Solenoid resetFire;
     SensorFunctions sf;
     VariableMap vm;
+    PickupFunctions pf;
 
     /**
      *
@@ -48,7 +49,7 @@ public class ShootingFunctions {
      */
     public ShootingFunctions(Victor n, Victor w, Solenoid o, Solenoid c, Solenoid f,
             Solenoid r, AnalogChannel np, SensorFunctions sFunctions, VariableMap vMap,
-            PIDController nc) {
+            PIDController nc, PickupFunctions pFunctions) {
         neck = n;
         winch = w;
         openJaw = o;
@@ -59,67 +60,81 @@ public class ShootingFunctions {
         sf = sFunctions;
         vm = vMap;
         shotFired = false;
-        fireCalled = false;
+        vm.fireCalled = false;
         neckController = nc;
+        pf = pFunctions;
     }
 
     public void resetShootingSystem() {
         neck.set(0);
         winch.set(0);
-        openJaw.set(false);
-        closeJaw.set(false);
+        pf.setJawClose();
         fire.set(false);
         resetFire.set(false);
-        shotFired = false;
-        fireCalled = false;
+        shotFired = true;
+        vm.fireCalled = false;
+        cyclesSinceLastShot = 0;
     }
 
     public void autoShot(int shot) {
         vm.currentNeckSetPoint = vm.SHOT_POT_VALUES[shot];
         neckController.setSetpoint(vm.currentNeckSetPoint);
-        vm.neckMoved = true;
         if (sf.getNeckPot() == vm.SHOT_POT_VALUES[shot]) {
             holdNeckPosition();
-            fireCalled = true;
-            readyShot();
             fire();
         }
     }
 
     public void fire() {
         if (sf.shotReady()) {
-            fire.set(true);
-            resetFire.set(false);
-            shotFired = true;
-            fireCalled = false;
+            if (!vm.fireCalled) {
+                if (vm.jawOpen) {
+                    vm.fireCalled = true;
+                    vm.fireCalledCycles = 10000;
+                } else {
+                    vm.fireCalled = true;
+                    vm.fireCalledCycles = 0;
+                }
+            } else if (vm.fireCalledCycles > 50) {
+                fire.set(true);
+                resetFire.set(false);
+                shotFired = true;
+                vm.fireCalled = false;
+            } else {
+                readyShot();
+            }
         } else {
-            fireCalled = true;
+            vm.fireCalled = true;
             readyShot();
         }
     }
 
     public void readyShot() {
         if (shotFired) {
-            resetFire.set(true);
-            fire.set(false);
-            shotFired = false;
-            openJaw.set(false);
-            closeJaw.set(false);
-        } else {
             resetFire.set(false);
             fire.set(false);
+            shotFired = false;
+            pf.setJawClose();
+        } else {
             if (sf.shotReady()) {
                 winch.set(0);
+                resetFire.set(false);
+                fire.set(false);
+                cyclesSinceLastShot = 0;
+            } else if (cyclesSinceLastShot > 20) {
+                resetFire.set(true);
+                fire.set(false);
+                winch.set(-0.5);
             } else {
-                winch.set(-1);
+                cyclesSinceLastShot++;
             }
         }
-        if (fireCalled) {
-            openJaw.set(true);
-            closeJaw.set(false);
+        if (vm.fireCalled) {
+            pf.setJawOpen();
+            vm.fireCalledCycles++;
         }
     }
-    
+
     /**
      * Manually aims the pickup/shooter
      *
@@ -128,39 +143,23 @@ public class ShootingFunctions {
     public void manualAim(double direction) {
         if (direction < -vm.DEADZONE || direction > vm.DEADZONE) {
             if (direction < 0 && !sf.neckPastMax()) { // only allows backwords movement when not past farthest position
-                vm.currentNeckSetPoint = sf.getNeckPot() - (int)(direction*5);
-                if (vm.currentNeckSetPoint > vm.FRONT_LOAD_POS) {
-                    vm.currentNeckSetPoint = vm.FRONT_LOAD_POS;
-                }
-                vm.neckMoved = true;
+                neck.set(direction);
             } else if (direction > 0 && !sf.neckPastMin()) { // only allows forward movement when not past closest position
-                vm.currentNeckSetPoint = sf.getNeckPot() - (int)(direction*5);
-                if (vm.currentNeckSetPoint < vm.BACK_LOAD_POS) {
-                    vm.currentNeckSetPoint = vm.BACK_LOAD_POS;
-                }
-                vm.neckMoved = true;
+                neck.set(direction);
             } else {
                 holdNeckPosition();
             }
-        } else if (!vm.autoUpright) {
+        } else if (!vm.autoUpright && !vm.autoShooting) {
             holdNeckPosition();
         }
-        neckController.setSetpoint(vm.currentNeckSetPoint);
     }
 
     /**
      * Set's neck to hold current position using PID.
      */
     public void holdNeckPosition() {
-        if (vm.neckMoved) {
-            vm.currentNeckSetPoint = sf.getNeckPot();
-            vm.neckMoved = false;
-        }
-        if (sf.neckPastMax()) {
-            vm.currentNeckSetPoint = vm.FRONT_LOAD_POS;
-        }
-        if (sf.neckPastMin()) {
-            vm.currentNeckSetPoint = vm.BACK_LOAD_POS;
-        }
+        neckController.disable();
+        neck.set(0);
+        vm.holdCalled = true;
     }
 }

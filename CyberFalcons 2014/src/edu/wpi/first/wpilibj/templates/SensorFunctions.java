@@ -6,7 +6,6 @@ package edu.wpi.first.wpilibj.templates;
 
 import edu.wpi.first.wpilibj.AnalogChannel;
 import edu.wpi.first.wpilibj.DigitalInput;
-import edu.wpi.first.wpilibj.Encoder;
 import edu.wpi.first.wpilibj.PIDController;
 
 /**
@@ -19,6 +18,7 @@ public class SensorFunctions {
     int shotReadyValue;
     VariableMap vm;
     DigitalInput ardUltra;
+    DigitalInput winchLimit;
     AnalogChannel neckPot;
     AnalogChannel winchPot;
 //    Encoder driveLeftE;
@@ -34,13 +34,14 @@ public class SensorFunctions {
      * @param nc the PIDController for the neck
      */
     public SensorFunctions(AnalogChannel np, AnalogChannel wp, DigitalInput u,
-            VariableMap vMap, PIDController nc/*, Encoder dl, Encoder dr*/) {
+            VariableMap vMap, PIDController nc, DigitalInput wl/*, Encoder dl, Encoder dr*/) {
         neckPot = np;
         winchPot = wp;
         ardUltra = u;
         vm = vMap;
         shotReadyValue = vm.SHOT_POWER_VALUES[0];
         neckControl = nc;
+        winchLimit = wl;
 //        driveLeftE = dl;
 //        driveRightE = dr;
     }
@@ -58,14 +59,14 @@ public class SensorFunctions {
     }
 
     public boolean neckInFrontLoadPosition() {
-        if (getNeckPot() <= vm.FRONT_LOAD_POS - 5) {
+        if (getNeckPot() >= vm.FRONT_LOAD_POS - 5) {
             return true;
         }
         return false;
     }
 
     public boolean neckInBackLoadPosition() {
-        if (getNeckPot() >= vm.BACK_LOAD_POS + 5) {
+        if (getNeckPot() <= vm.BACK_LOAD_POS + 5) {
             return true;
         }
         return false;
@@ -77,7 +78,7 @@ public class SensorFunctions {
      * @return
      */
     public boolean neckPastMin() {
-        return (getNeckPot() <= vm.BACK_LOAD_POS) || (neckControl.getSetpoint() <= vm.BACK_LOAD_POS);
+        return (getNeckPot() <= vm.BACK_LOAD_POS);
     }
 
     /**
@@ -86,7 +87,7 @@ public class SensorFunctions {
      * @return
      */
     public boolean neckPastMax() {
-        return (getNeckPot() >= vm.FRONT_LOAD_POS) || (neckControl.getSetpoint() >= vm.FRONT_LOAD_POS);
+        return (getNeckPot() >= vm.FRONT_LOAD_POS);
     }
 
     /**
@@ -99,7 +100,7 @@ public class SensorFunctions {
     }
 
     public boolean shotReady() {
-        return winchPot.getValue() > shotReadyValue;
+        return winchPot.getValue() > shotReadyValue || !winchLimit.get(); 
     }
 //    public double getLeftDriveEncoder() {
 //        return driveLeftE.getDistance();

@@ -65,6 +65,7 @@ public class CyberFalcons2014Main extends IterativeRobot {
     // Operation Variables
     boolean teleopActive = false;
     boolean yClean = true;
+    boolean limitClean = true;
     int currentAutoShot = 0;
 
     /**
@@ -118,21 +119,21 @@ public class CyberFalcons2014Main extends IterativeRobot {
         backLimit = new DigitalInput(/*cRIO slot*/1, VariableMap.DIO_BACK_LIMIT);
         winchLimit = new DigitalInput(/*cRIO slot*/1, VariableMap.DIO_WINCH_LIMIT);
         // PID Controllers
-        neckControl = new PIDController(-0.1, 0, 0, neckPot, neck);
-        
-        sf = new SensorFunctions(neckPot, winchPot, ultra, vm, neckControl/*, driveLeftE, driveRightE*/);
+        neckControl = new PIDController(-0.23, 0, -0.1, neckPot, neck);
+
+        sf = new SensorFunctions(neckPot, winchPot, ultra, vm, neckControl, winchLimit/*, driveLeftE, driveRightE*/);
         df = new DriveFunctions(talonDriveRight, talonDriveRight2, talonDriveLeft, talonDriveLeft2,
                 /*driveRightE, driveLeftE,*/ shifter1, shifter2, sf, vm);
-        shf = new ShootingFunctions(neck, winch, openJaw, closeJaw, fire,
-                resetFire, neckPot, sf, vm, neckControl);
         pf = new PickupFunctions(neck, roller, openJaw, closeJaw, neckPot, sf, vm, neckControl);
+        shf = new ShootingFunctions(neck, winch, openJaw, closeJaw, fire,
+                resetFire, neckPot, sf, vm, neckControl, pf);
 
         // Variable Initializations
         vm.pickingUp = false;
         vm.pickingFront = false;
         vm.autoCatching = false;
         vm.autoUpright = false;
-        
+
     }
 
     /**
@@ -163,7 +164,8 @@ public class CyberFalcons2014Main extends IterativeRobot {
         vm.freeNeckValues();
         vm.autoCatching = false;
         vm.autoUpright = false;
-        vm.neckMoved = true;
+        vm.currentNeckSetPoint = sf.getNeckPot();
+        neckControl.setSetpoint(vm.currentNeckSetPoint);
         neckControl.enable();
     }
 
@@ -182,7 +184,7 @@ public class CyberFalcons2014Main extends IterativeRobot {
             // Only run if teleop has been active
             return;
         }
-        
+
         drive();
         ballManipulator();
     }
@@ -197,8 +199,9 @@ public class CyberFalcons2014Main extends IterativeRobot {
         vm.autoCatching = false;
         vm.pickingUp = false;
         vm.autoUpright = false;
-        vm.neckMoved = true;
-        neckControl.enable();
+        vm.currentNeckSetPoint = sf.getNeckPot();
+        neckControl.setSetpoint(vm.currentNeckSetPoint);
+        neckControl.disable();
     }
 
     /**
@@ -208,19 +211,20 @@ public class CyberFalcons2014Main extends IterativeRobot {
         drive();
         ballManipulator();
         checkForLimitUpdates();
-        if (xboxDriver.getRightTrigger()) {
-            fire.set(true);
-            resetFire.set(false);
-        } else if (fire.get()) {
-            fire.set(false);
-            resetFire.set(true);
-        } else {
-            fire.set(false);
-            resetFire.set(false);
-        }
-        System.out.println("Neck Pot: " + neckPot.getValue() + "\tNeck Max: " + vm.FRONT_LOAD_POS
-                + "\tNeck Min" + vm.BACK_LOAD_POS + "\tNeck Upright: " + vm.JAW_UPRIGHT_POS
-                + "\tWinch Pot: " + winchPot.getValue() + "\tWinch Limit: " + winchLimit.get());
+//        if (xboxDriver.getRightTrigger()) {
+//            fire.set(true);
+//            resetFire.set(false);
+//        } else if (fire.get()) {
+//            fire.set(false);
+//            resetFire.set(true);
+//        } else {
+//            fire.set(false);
+//            resetFire.set(false);
+//        }
+        System.out.println("\tNeck Max: " + vm.FRONT_LOAD_POS
+                + "Neck Min" + vm.BACK_LOAD_POS + "\tNeck Upright: " + vm.JAW_UPRIGHT_POS
+                + "\tWinch Pot: " + winchPot.getValue() + "\tWinch Limit: " + winchLimit.get()
+                + "\tNeck Pot: " + neckPot.getValue() + "\tNeck Setpoint: " + vm.currentNeckSetPoint);
     }
 
     /**
@@ -240,7 +244,7 @@ public class CyberFalcons2014Main extends IterativeRobot {
         } else {
             df.controlFlipButtonReleased();
         }
-        
+
         if (xboxDriver.getBtnLB()) { // driver right bumper shifts to low gear
             df.shiftLow();
         } else if (xboxDriver.getBtnRB()) { // driver left bumper shifts to high gear
@@ -248,23 +252,31 @@ public class CyberFalcons2014Main extends IterativeRobot {
         } else {
             df.notShifting();
         }
-        
+
         df.setDriveRight(xboxDriver.getRightY());
         df.setDriveLeft(xboxDriver.getLeftY());
 //        }
     }
-    
+
     public void checkForLimitUpdates() {
         if (!frontLimit.get()) {
-            vm.updateNeckPotValues(sf, true);
+            if (limitClean) {
+                vm.updateNeckPotValues(sf, true);
+            }
             vm.currentNeckSetPoint = vm.FRONT_LOAD_POS;
-        }
-        if (!backLimit.get()) {
-            vm.updateNeckPotValues(sf, false);
+            limitClean = false;
+        } else if (!backLimit.get()) {
+            if (limitClean) {
+                vm.updateNeckPotValues(sf, false);
+            }
             vm.currentNeckSetPoint = vm.BACK_LOAD_POS;
+            limitClean = false;
+        } else {
+            limitClean = true;
         }
         if (!winchLimit.get()) {
             vm.updateWinchPotValues(sf);
+            sf.setShotReadyValue(0);
         }
     }
 
@@ -273,9 +285,12 @@ public class CyberFalcons2014Main extends IterativeRobot {
      * driver's and the operator's xbox controller
      */
     public void ballManipulator() {
+        vm.holdCalled = false;
         // Auto Upright enabled while driver right thumb click
         if (xboxDriver.getBtnR3()) {
             vm.autoUpright = true;
+            vm.pickingUp = false;
+            vm.autoShooting = false;
         } else {
             vm.autoUpright = false;
         }
@@ -283,11 +298,16 @@ public class CyberFalcons2014Main extends IterativeRobot {
         if (xboxDriver.getBtnA()) { // Driver button A starts the frontpickup
             vm.pickingUp = true;
             vm.pickingFront = true;
+            pf.setJawClose();
         } else if (xboxDriver.getBtnB()) { // Driver button B starts the rearpickup
             vm.pickingUp = true;
             vm.pickingFront = false;
+            pf.setJawOpen();
         } else if (xboxDriver.getBtnY()) { // Driver button Y ends pickup
             vm.pickingUp = false;
+            vm.autoShooting = false;
+            vm.autoUpright = false;
+            neckControl.disable();
         }
         if (vm.pickingUp) {
             if (vm.pickingFront) { // runs appropriate auto pickup when picking up
@@ -295,7 +315,7 @@ public class CyberFalcons2014Main extends IterativeRobot {
             } else {
                 pf.backPickUp();
             }
-        } else if (xboxDriver.getBtnX() || xboxOperator.getBtnLB()) { // rollers spit ball out when driver holds x or operator holds left bumper
+        } else if (xboxDriver.getBtnX() || xboxOperator.getBtnLB() || vm.fireCalled) { // rollers spit ball out when driver holds x or operator holds left bumper
             pf.moveRollerReverse();
         } else if (xboxOperator.getBtnRB()) { // roller pulls ball in while operator holds right bumper
             pf.moveRollerForward();
@@ -303,16 +323,28 @@ public class CyberFalcons2014Main extends IterativeRobot {
             pf.turnRollerOff();
         }
         // Shooting
+        // Stay ready to shoot at last set power but be able to manually winch
+        if (xboxOperator.getDpadX() > 0.5 && winchLimit.get() && !sf.shotReady()) {
+            winch.set(-.5);
+        } else {
+            shf.readyShot();
+        }
         if (!vm.pickingUp) { // stops the neck from moving away if picking up
             if (xboxDriver.getRightTrigger()) { // driver right trigger fires at current position
-//                shf.fire();
+                shf.fire();
+                vm.autoShooting = false;
             } else if (xboxDriver.getLeftTrigger()) { // driver left trigger fires at the current preset angle
-//                shf.autoShot(currentAutoShot);
+                shf.autoShot(currentAutoShot);
+                vm.autoShooting = true;
             } else if (vm.autoUpright) {
                 pf.moveToUprightPos();
+                vm.autoShooting = false;
             } else {
-                shf.manualAim(xboxOperator.getLeftY()); // operator can manually aim neck using left y axis when not shooting
+                vm.fireCalled = false;
+                vm.autoShooting = false;
             }
+        } else {
+            vm.autoShooting = false;
         }
         if (xboxOperator.getBtnA()) { // the current autoshot will be the first angle when the operator presses A
             currentAutoShot = 0;
@@ -336,7 +368,7 @@ public class CyberFalcons2014Main extends IterativeRobot {
             yClean = true;
         }
         // Jaw Management
-        if (xboxOperator.getBtnBACK()) { // operator can close the jaw with back button
+        if (xboxOperator.getBtnBACK() || vm.autoUpright) { // operator can close the jaw with back button
             pf.setJawClose();
             vm.autoCatching = false;
         } else if (xboxOperator.getBtnSTART()) { // operator can open the jaw with start button
@@ -344,15 +376,15 @@ public class CyberFalcons2014Main extends IterativeRobot {
             vm.autoCatching = false;
         } else if (vm.autoCatching) { // if autocatch is enabled the automatic catching program will run
             pf.autoCatch();
-        } else {
+        } else if (!vm.pickingUp && !vm.fireCalled) {
             pf.stopJawPistons();
         }
-        // Stay ready to shoot at last set power but be able to manually winch
-        if (xboxOperator.getDpadX() > 0.5) {
-            winch.set(-.5);
+        // Decide if neck pid should be active
+        if ((vm.autoShooting || vm.autoUpright || vm.pickingUp) && !vm.holdCalled) {
+            neckControl.enable();
         } else {
-            winch.set(0);
-//        shf.readyShot();
+            neckControl.disable();
+            shf.manualAim(xboxOperator.getLeftY()); // operator can manually aim neck using left y axis when not shooting
         }
     }
 }

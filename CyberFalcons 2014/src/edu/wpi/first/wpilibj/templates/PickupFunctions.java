@@ -55,52 +55,44 @@ public class PickupFunctions {
     }
 
     public void frontPickUp() {
-        neckControl.setSetpoint(vm.FRONT_LOAD_POS);
-        vm.neckMoved = true;
-        stopJawPistons();
+        vm.currentNeckSetPoint = vm.FRONT_LOAD_POS;
+        neckControl.setSetpoint(vm.currentNeckSetPoint);
         // Spin the rollers to swallow the ball
         moveRollerForward();
         if (sFunctions.neckInFrontLoadPosition()) {
             if (sFunctions.isBallOnUltraSound()) {
-                if (pickupEndTimer < 50) {
+                if (pickupEndTimer > 30) {
                     vm.autoCatching = true;
                     pickupEndTimer = 0;
+                    turnRollerOff();
                     vm.pickingUp = false;
                 } else {
                     pickupEndTimer++;
                 }
-            } else {
-                // Open the jaw
-                setJawOpen();
             }
-
         }
     }
 
     public void backPickUp() {
-        neckControl.setSetpoint(vm.BACK_LOAD_POS);
-        vm.neckMoved = true;
-        stopJawPistons();
+        vm.currentNeckSetPoint = vm.BACK_LOAD_POS;
+        neckControl.setSetpoint(vm.currentNeckSetPoint);
         // Spin the rollers to swallow the ball
         moveRollerReverse();
         if (sFunctions.neckInBackLoadPosition()) {
             if (sFunctions.isBallOnUltraSound()) {
-                if (pickupEndTimer < 50) {
+                if (pickupEndTimer > 30) {
                     pickupEndTimer = 0;
+                    turnRollerOff();
                     vm.pickingUp = false;
                 } else {
                     pickupEndTimer++;
                 }
-            } else {
-                // Close the jaw 
-                setJawClose();
             }
         }
     }
 
     public void moveToUprightPos() {
         vm.autoUpright = true;
-        vm.neckMoved = true;
         stopJawPistons();
         neckControl.setSetpoint(vm.JAW_UPRIGHT_POS);
         // activate autoneck control if not within 5 ticks of upright position
@@ -113,12 +105,13 @@ public class PickupFunctions {
 
     public void moveRollerForward() {
         // Move the roller to eject the ball
-        roller.set(0.6);
+        roller.set(1);
     }
 
     public void moveRollerReverse() {
         // Move the roller to suck in the ball
-        roller.set(-0.6);
+        roller.set(-1);
+
     }
 
     public void turnRollerOff() {
@@ -141,11 +134,13 @@ public class PickupFunctions {
     public void setJawOpen() {
         jawOpen.set(true);
         jawClose.set(false);
+        vm.jawOpen = true;
     }
 
     public void setJawClose() {
         jawOpen.set(false);
         jawClose.set(true);
+        vm.jawOpen = false;
     }
 
     public void stopJawPistons() {

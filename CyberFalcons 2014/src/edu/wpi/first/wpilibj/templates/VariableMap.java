@@ -7,18 +7,22 @@ public class VariableMap {
      * Dead-zone tolerance for the joysticks. The keyword 'final' means that
      * this variable can not be assigned to (changed) elsewhere in the code.
      */
-    public double DEADZONE = 0.1;
+    public double DEADZONE = 0.15;
     public boolean autoCatching;
     public boolean autoUpright;
     public boolean pickingUp;
     public boolean pickingFront;
-    public boolean neckMoved;
+    public boolean autoShooting;
+    public boolean holdCalled;
+    public boolean fireCalled;
+    public boolean jawOpen;
+    public int fireCalledCycles;
     public int currentNeckSetPoint;
-    public int[] SHOT_POT_VALUES = {1, 2, 3};
-    public int[] SHOT_POWER_VALUES = {1, 2};
+    public int[] SHOT_POWER_VALUES = {1000, 2000};
     public int FRONT_LOAD_POS = 2000; // the back + 106
     public int BACK_LOAD_POS = 0; // the front - 106
     public int JAW_UPRIGHT_POS = BACK_LOAD_POS + 36;
+    public int[] SHOT_POT_VALUES = {BACK_LOAD_POS, BACK_LOAD_POS, BACK_LOAD_POS}; // low far; high far; truss
 
     /**
      * For Initializing the neck so it is free to move until set by hitting
@@ -38,13 +42,19 @@ public class VariableMap {
      */
     public void updateNeckPotValues(SensorFunctions sf, boolean frontLimit) {
         if (frontLimit) {
-            FRONT_LOAD_POS = sf.getNeckPot() - 2;
-            BACK_LOAD_POS = FRONT_LOAD_POS - 106;
-            JAW_UPRIGHT_POS = BACK_LOAD_POS + 36;
+            FRONT_LOAD_POS = sf.getNeckPot();
+            BACK_LOAD_POS = FRONT_LOAD_POS - 110;
+            JAW_UPRIGHT_POS = BACK_LOAD_POS + 33;
+            SHOT_POT_VALUES[0] = BACK_LOAD_POS + 62;
+            SHOT_POT_VALUES[1] = BACK_LOAD_POS + 66;
+            SHOT_POT_VALUES[2] = BACK_LOAD_POS + 70;
         } else {
-            BACK_LOAD_POS = sf.getNeckPot() + 2;
-            FRONT_LOAD_POS = BACK_LOAD_POS + 106;
-            JAW_UPRIGHT_POS = BACK_LOAD_POS + 36;
+            BACK_LOAD_POS = sf.getNeckPot();
+            FRONT_LOAD_POS = BACK_LOAD_POS + 110;
+            JAW_UPRIGHT_POS = BACK_LOAD_POS + 33;
+            SHOT_POT_VALUES[0] = BACK_LOAD_POS + 62;
+            SHOT_POT_VALUES[1] = BACK_LOAD_POS + 66;
+            SHOT_POT_VALUES[2] = BACK_LOAD_POS + 70;
         }
     }
 
@@ -53,8 +63,8 @@ public class VariableMap {
      * limit switch is pressed
      */
     public void updateWinchPotValues(SensorFunctions sf) {
-        SHOT_POWER_VALUES[0] = sf.getNeckPot() + 5;
-        SHOT_POWER_VALUES[1] = sf.getNeckPot() + 100;
+        SHOT_POWER_VALUES[0] = sf.getNeckPot() - 3;
+        SHOT_POWER_VALUES[1] = sf.getNeckPot() - 50;
     }
     //PWM
     public static int PWM_DRIVERIGHT = 3;

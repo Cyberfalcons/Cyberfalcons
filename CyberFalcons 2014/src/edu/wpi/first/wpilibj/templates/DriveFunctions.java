@@ -91,9 +91,17 @@ public class DriveFunctions {
                 driveRight.set(-power);
             }
         } else {
-            driveLeft.set(0);
+            if (!controlFlip) {
+                driveLeft.set(-power);
+            } else {
+                driveRight.set(-power);
+            }
         }
-        driveLeft2.set(driveLeft.get());
+        if (!controlFlip) {
+            driveLeft2.set(driveLeft.get());
+        } else {
+            driveRight2.set(driveRight.get());
+        }
     }
 
     /**
@@ -103,15 +111,23 @@ public class DriveFunctions {
      */
     public void setDriveRight(double power) {
         if (power < -vm.DEADZONE || power > vm.DEADZONE) {
-            if (!controlFlip) {
-                driveRight.set(power);
-            } else {
+            if (controlFlip) {
                 driveLeft.set(power);
+            } else {
+                driveRight.set(power);
             }
         } else {
-            driveRight.set(0);
+            if (controlFlip) {
+                driveLeft.set(power);
+            } else {
+                driveRight.set(power);
+            }
         }
-        driveRight2.set(driveRight.get());
+        if (controlFlip) {
+            driveLeft2.set(driveLeft.get());
+        } else {
+            driveRight2.set(driveRight.get());
+        }
     }
 
     /**
