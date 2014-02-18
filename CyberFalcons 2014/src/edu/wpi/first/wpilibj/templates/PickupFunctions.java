@@ -59,17 +59,18 @@ public class PickupFunctions {
         neckControl.setSetpoint(vm.currentNeckSetPoint);
         // Spin the rollers to swallow the ball
         moveRollerForward();
-        if (sFunctions.neckInFrontLoadPosition()) {
-            if (sFunctions.isBallOnUltraSound()) {
-                if (pickupEndTimer > 30) {
-                    vm.autoCatching = true;
-                    pickupEndTimer = 0;
-                    turnRollerOff();
-                    vm.pickingUp = false;
-                } else {
-                    pickupEndTimer++;
-                }
+        if (sFunctions.isBallOnUltraSound()) {
+            if (pickupEndTimer > 25) {
+                vm.autoCatching = true;
+                pickupEndTimer = 0;
+                turnRollerOff();
+                vm.pickingUp = false;
+            } else {
+                pickupEndTimer++;
             }
+        }
+        if (vm.jawOpen) {
+            setJawClose();
         }
     }
 
@@ -78,16 +79,17 @@ public class PickupFunctions {
         neckControl.setSetpoint(vm.currentNeckSetPoint);
         // Spin the rollers to swallow the ball
         moveRollerReverse();
-        if (sFunctions.neckInBackLoadPosition()) {
-            if (sFunctions.isBallOnUltraSound()) {
-                if (pickupEndTimer > 30) {
-                    pickupEndTimer = 0;
-                    turnRollerOff();
-                    vm.pickingUp = false;
-                } else {
-                    pickupEndTimer++;
-                }
+        if (sFunctions.isBallOnUltraSound()) {
+            if (pickupEndTimer > 30) {
+                pickupEndTimer = 0;
+                turnRollerOff();
+                vm.pickingUp = false;
+            } else {
+                pickupEndTimer++;
             }
+        }
+        if (!vm.jawOpen) {
+            setJawOpen();
         }
     }
 

@@ -47,14 +47,14 @@ public class VariableMap {
             JAW_UPRIGHT_POS = BACK_LOAD_POS + 33;
             SHOT_POT_VALUES[0] = BACK_LOAD_POS + 62;
             SHOT_POT_VALUES[1] = BACK_LOAD_POS + 66;
-            SHOT_POT_VALUES[2] = BACK_LOAD_POS + 70;
+            SHOT_POT_VALUES[2] = BACK_LOAD_POS + 50;
         } else {
             BACK_LOAD_POS = sf.getNeckPot();
             FRONT_LOAD_POS = BACK_LOAD_POS + 110;
             JAW_UPRIGHT_POS = BACK_LOAD_POS + 33;
             SHOT_POT_VALUES[0] = BACK_LOAD_POS + 62;
             SHOT_POT_VALUES[1] = BACK_LOAD_POS + 66;
-            SHOT_POT_VALUES[2] = BACK_LOAD_POS + 70;
+            SHOT_POT_VALUES[2] = BACK_LOAD_POS + 50;
         }
     }
 
@@ -89,6 +89,7 @@ public class VariableMap {
     public static int DIO_FRONT_LIMIT = 3;
     public static int DIO_BACK_LIMIT = 4;
     public static int DIO_WINCH_LIMIT = 5;
+    public static int DIO_CATCH_SIGNAL = 14;
 //    public static int DIO_ENCODER_RIGHT_A = 2;
 //    public static int DIO_ENCODER_RIGHT_B = 3;
 //    public static int DIO_ENCODER_LEFT_A = 4;

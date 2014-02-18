@@ -25,6 +25,7 @@ public class CyberFalcons2014Main extends IterativeRobot {
     SensorFunctions sf;
     ShootingFunctions shf;
     PickupFunctions pf;
+    SignalFunctions sigf;
     // PID Controller
     PIDController neckControl;
     // Xbox controllers
@@ -62,6 +63,8 @@ public class CyberFalcons2014Main extends IterativeRobot {
     DigitalInput frontLimit;
     DigitalInput backLimit;
     DigitalInput winchLimit;
+    // Light Signals
+    DigitalOutput catchSignal;
     // Operation Variables
     boolean teleopActive = false;
     boolean yClean = true;
@@ -118,6 +121,8 @@ public class CyberFalcons2014Main extends IterativeRobot {
         frontLimit = new DigitalInput(/*cRIO slot*/1, VariableMap.DIO_FRONT_LIMIT);
         backLimit = new DigitalInput(/*cRIO slot*/1, VariableMap.DIO_BACK_LIMIT);
         winchLimit = new DigitalInput(/*cRIO slot*/1, VariableMap.DIO_WINCH_LIMIT);
+        // Light Signals
+        catchSignal = new DigitalOutput (/*cRIO slot*/1, VariableMap.DIO_CATCH_SIGNAL);
         // PID Controllers
         neckControl = new PIDController(-0.23, 0, -0.1, neckPot, neck);
 
@@ -127,6 +132,7 @@ public class CyberFalcons2014Main extends IterativeRobot {
         pf = new PickupFunctions(neck, roller, openJaw, closeJaw, neckPot, sf, vm, neckControl);
         shf = new ShootingFunctions(neck, winch, openJaw, closeJaw, fire,
                 resetFire, neckPot, sf, vm, neckControl, pf);
+        sigf = new SignalFunctions(catchSignal, vm);
 
         // Variable Initializations
         vm.pickingUp = false;
@@ -166,7 +172,7 @@ public class CyberFalcons2014Main extends IterativeRobot {
         vm.autoUpright = false;
         vm.currentNeckSetPoint = sf.getNeckPot();
         neckControl.setSetpoint(vm.currentNeckSetPoint);
-        neckControl.enable();
+        neckControl.disable();
     }
 
     /**
@@ -187,6 +193,7 @@ public class CyberFalcons2014Main extends IterativeRobot {
 
         drive();
         ballManipulator();
+        sigf.updateLights();
     }
 
     /**
@@ -211,16 +218,7 @@ public class CyberFalcons2014Main extends IterativeRobot {
         drive();
         ballManipulator();
         checkForLimitUpdates();
-//        if (xboxDriver.getRightTrigger()) {
-//            fire.set(true);
-//            resetFire.set(false);
-//        } else if (fire.get()) {
-//            fire.set(false);
-//            resetFire.set(true);
-//        } else {
-//            fire.set(false);
-//            resetFire.set(false);
-//        }
+        sigf.updateLights();
         System.out.println("\tNeck Max: " + vm.FRONT_LOAD_POS
                 + "Neck Min" + vm.BACK_LOAD_POS + "\tNeck Upright: " + vm.JAW_UPRIGHT_POS
                 + "\tWinch Pot: " + winchPot.getValue() + "\tWinch Limit: " + winchLimit.get()
@@ -259,13 +257,13 @@ public class CyberFalcons2014Main extends IterativeRobot {
     }
 
     public void checkForLimitUpdates() {
-        if (!frontLimit.get()) {
+        if (frontLimit.get()) {
             if (limitClean) {
                 vm.updateNeckPotValues(sf, true);
             }
             vm.currentNeckSetPoint = vm.FRONT_LOAD_POS;
             limitClean = false;
-        } else if (!backLimit.get()) {
+        } else if (backLimit.get()) {
             if (limitClean) {
                 vm.updateNeckPotValues(sf, false);
             }
@@ -353,9 +351,9 @@ public class CyberFalcons2014Main extends IterativeRobot {
         } else if (xboxOperator.getBtnX()) { // the current autoshot will be the first angle when the operator presses X
             currentAutoShot = 2;
         }
-        if (xboxOperator.getLeftTrigger()) { // winch will wind to preset 1 when activated if left trigger is pressed by operator
+        if (xboxOperator.getBtnBACK()) { // winch will wind to preset 1 when activated if back button is pressed by operator
             sf.setShotReadyValue(0);
-        } else if (xboxOperator.getRightTrigger()) { // winch will wind to preset 1 when activated if right trigger is pressed by operator
+        } else if (xboxOperator.getBtnSTART()) { // winch will wind to preset 1 when activated if start button is pressed by operator
             sf.setShotReadyValue(1);
         }
         // Auto Catch Toggle
@@ -368,10 +366,10 @@ public class CyberFalcons2014Main extends IterativeRobot {
             yClean = true;
         }
         // Jaw Management
-        if (xboxOperator.getBtnBACK() || vm.autoUpright) { // operator can close the jaw with back button
+        if (xboxOperator.getLeftTrigger()|| vm.autoUpright) { // operator can close the jaw with left trigger
             pf.setJawClose();
             vm.autoCatching = false;
-        } else if (xboxOperator.getBtnSTART()) { // operator can open the jaw with start button
+        } else if (xboxOperator.getRightTrigger()) { // operator can open the jaw with right trigger
             pf.setJawOpen();
             vm.autoCatching = false;
         } else if (vm.autoCatching) { // if autocatch is enabled the automatic catching program will run
