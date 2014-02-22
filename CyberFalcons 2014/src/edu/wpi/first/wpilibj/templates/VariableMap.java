@@ -16,9 +16,10 @@ public class VariableMap {
     public boolean holdCalled;
     public boolean fireCalled;
     public boolean jawOpen;
+    public boolean standby;
     public int fireCalledCycles;
     public int currentNeckSetPoint;
-    public int[] SHOT_POWER_VALUES = {1000, 2000};
+    public int[] SHOT_POWER_VALUES = {2000, 1000}; // high power, low power
     public int FRONT_LOAD_POS = 2000; // the back + 106
     public int BACK_LOAD_POS = 0; // the front - 106
     public int JAW_UPRIGHT_POS = BACK_LOAD_POS + 36;
@@ -31,6 +32,7 @@ public class VariableMap {
     public void freeNeckValues() {
         FRONT_LOAD_POS = 2000; // the back + 100
         BACK_LOAD_POS = 0; // the front - 100
+        JAW_UPRIGHT_POS = BACK_LOAD_POS + 36;
     }
 
     /**
@@ -89,6 +91,7 @@ public class VariableMap {
     public static int DIO_FRONT_LIMIT = 3;
     public static int DIO_BACK_LIMIT = 4;
     public static int DIO_WINCH_LIMIT = 5;
+    public static int DIO_STANDBY_SIGNAL = 13;
     public static int DIO_CATCH_SIGNAL = 14;
 //    public static int DIO_ENCODER_RIGHT_A = 2;
 //    public static int DIO_ENCODER_RIGHT_B = 3;

@@ -65,11 +65,15 @@ public class CyberFalcons2014Main extends IterativeRobot {
     DigitalInput winchLimit;
     // Light Signals
     DigitalOutput catchSignal;
+    DigitalOutput standbySignal;
     // Operation Variables
     boolean teleopActive = false;
     boolean yClean = true;
     boolean limitClean = true;
     int currentAutoShot = 0;
+    // Autonomous Variables
+    boolean movedForward = false;
+    int autoCycles = 0;
 
     /**
      * This function is run when the robot is first started up and should be
@@ -122,7 +126,8 @@ public class CyberFalcons2014Main extends IterativeRobot {
         backLimit = new DigitalInput(/*cRIO slot*/1, VariableMap.DIO_BACK_LIMIT);
         winchLimit = new DigitalInput(/*cRIO slot*/1, VariableMap.DIO_WINCH_LIMIT);
         // Light Signals
-        catchSignal = new DigitalOutput (/*cRIO slot*/1, VariableMap.DIO_CATCH_SIGNAL);
+        catchSignal = new DigitalOutput(/*cRIO slot*/1, VariableMap.DIO_CATCH_SIGNAL);
+        standbySignal = new DigitalOutput(/*cRIO slot*/1, VariableMap.DIO_STANDBY_SIGNAL);
         // PID Controllers
         neckControl = new PIDController(-0.23, 0, -0.1, neckPot, neck);
 
@@ -132,7 +137,7 @@ public class CyberFalcons2014Main extends IterativeRobot {
         pf = new PickupFunctions(neck, roller, openJaw, closeJaw, neckPot, sf, vm, neckControl);
         shf = new ShootingFunctions(neck, winch, openJaw, closeJaw, fire,
                 resetFire, neckPot, sf, vm, neckControl, pf);
-        sigf = new SignalFunctions(catchSignal, vm);
+        sigf = new SignalFunctions(catchSignal, standbySignal, vm, sf);
 
         // Variable Initializations
         vm.pickingUp = false;
@@ -147,6 +152,16 @@ public class CyberFalcons2014Main extends IterativeRobot {
      */
     public void autonomousInit() {
         df.resetDriveSystem();
+        shf.resetShootingSystem();
+        vm.pickingUp = false;
+        vm.autoCatching = false;
+        vm.autoUpright = false;
+        vm.currentNeckSetPoint = sf.getNeckPot();
+        neckControl.setSetpoint(vm.currentNeckSetPoint);
+        neckControl.enable();
+        vm.standby = false;
+        movedForward = false;
+        autoCycles = 0;
     }
 
     /**
@@ -154,7 +169,17 @@ public class CyberFalcons2014Main extends IterativeRobot {
      */
     public void autonomousPeriodic() {
         Watchdog.getInstance().feed(); // Tell watchdog we are running
+        checkForLimitUpdates();
+        if (autoCycles < 100) {
+            df.setDriveLeft(-0.5);
+            df.setDriveRight(-0.5);
+        } else {
+            df.setDriveLeft(0);
+            df.setDriveRight(0);
+            shf.autoShot(1);
+        }
 
+        autoCycles++;
     }
 
     /**
@@ -167,12 +192,12 @@ public class CyberFalcons2014Main extends IterativeRobot {
         }
         shf.resetShootingSystem();
         vm.pickingUp = false;
-        vm.freeNeckValues();
         vm.autoCatching = false;
         vm.autoUpright = false;
         vm.currentNeckSetPoint = sf.getNeckPot();
         neckControl.setSetpoint(vm.currentNeckSetPoint);
         neckControl.disable();
+        vm.standby = true;
     }
 
     /**
@@ -209,6 +234,7 @@ public class CyberFalcons2014Main extends IterativeRobot {
         vm.currentNeckSetPoint = sf.getNeckPot();
         neckControl.setSetpoint(vm.currentNeckSetPoint);
         neckControl.disable();
+        vm.standby = true;
     }
 
     /**
@@ -330,7 +356,9 @@ public class CyberFalcons2014Main extends IterativeRobot {
         if (!vm.pickingUp) { // stops the neck from moving away if picking up
             if (xboxDriver.getRightTrigger()) { // driver right trigger fires at current position
                 shf.fire();
-                vm.autoShooting = false;
+                if (!xboxDriver.getLeftTrigger()) {
+                    vm.autoShooting = false;
+                }
             } else if (xboxDriver.getLeftTrigger()) { // driver left trigger fires at the current preset angle
                 shf.autoShot(currentAutoShot);
                 vm.autoShooting = true;
@@ -366,7 +394,7 @@ public class CyberFalcons2014Main extends IterativeRobot {
             yClean = true;
         }
         // Jaw Management
-        if (xboxOperator.getLeftTrigger()|| vm.autoUpright) { // operator can close the jaw with left trigger
+        if (xboxOperator.getLeftTrigger() || vm.autoUpright) { // operator can close the jaw with left trigger
             pf.setJawClose();
             vm.autoCatching = false;
         } else if (xboxOperator.getRightTrigger()) { // operator can open the jaw with right trigger
@@ -380,9 +408,15 @@ public class CyberFalcons2014Main extends IterativeRobot {
         // Decide if neck pid should be active
         if ((vm.autoShooting || vm.autoUpright || vm.pickingUp) && !vm.holdCalled) {
             neckControl.enable();
+        } else if (xboxOperator.getBtnR3()) {
+            shf.manualAimOveride(xboxOperator.getLeftY());
         } else {
             neckControl.disable();
             shf.manualAim(xboxOperator.getLeftY()); // operator can manually aim neck using left y axis when not shooting
+        }
+        // Standby Light
+        if (xboxOperator.getDpadX() < -1) {
+            vm.standby = !vm.standby;
         }
     }
 }

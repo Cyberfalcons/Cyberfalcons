@@ -81,7 +81,11 @@ public class ShootingFunctions {
         neckController.setSetpoint(vm.currentNeckSetPoint);
         if (sf.getNeckPot() == vm.SHOT_POT_VALUES[shot]) {
             holdNeckPosition();
-            fire();
+            vm.fireCalled = true;
+            if (vm.jawOpen) {
+                vm.fireCalledCycles = 10000;
+            }
+            readyShot();
         }
     }
 
@@ -124,7 +128,7 @@ public class ShootingFunctions {
             } else if (cyclesSinceLastShot > 20) {
                 resetFire.set(true);
                 fire.set(false);
-                winch.set(-0.5);
+                winch.set(-1);
             } else {
                 cyclesSinceLastShot++;
             }
@@ -145,6 +149,25 @@ public class ShootingFunctions {
             if (direction < 0 && !sf.neckPastMax()) { // only allows backwords movement when not past farthest position
                 neck.set(direction);
             } else if (direction > 0 && !sf.neckPastMin()) { // only allows forward movement when not past closest position
+                neck.set(direction);
+            } else {
+                holdNeckPosition();
+            }
+        } else if (!vm.autoUpright && !vm.autoShooting) {
+            holdNeckPosition();
+        }
+    }
+    
+    /**
+     * Manually aims the pickup/shooter.
+     * Able to stall/kill itself.
+     * @param direction - a value from -1 to 1
+     */
+    public void manualAimOveride(double direction) {
+        if (direction < -vm.DEADZONE || direction > vm.DEADZONE) {
+            if (direction < 0) {
+                neck.set(direction);
+            } else if (direction > 0) {
                 neck.set(direction);
             } else {
                 holdNeckPosition();

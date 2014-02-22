@@ -143,6 +143,7 @@ public class PickupFunctions {
         jawOpen.set(false);
         jawClose.set(true);
         vm.jawOpen = false;
+        vm.fireCalledCycles = 0;
     }
 
     public void stopJawPistons() {

@@ -14,7 +14,6 @@ import edu.wpi.first.wpilibj.PIDController;
  */
 public class SensorFunctions {
 
-    final int exampleVal = 500;
     int shotReadyValue;
     VariableMap vm;
     DigitalInput ardUltra;
@@ -39,7 +38,7 @@ public class SensorFunctions {
         winchPot = wp;
         ardUltra = u;
         vm = vMap;
-        shotReadyValue = vm.SHOT_POWER_VALUES[0];
+        shotReadyValue = 0;
         neckControl = nc;
         winchLimit = wl;
 //        driveLeftE = dl;
@@ -96,11 +95,11 @@ public class SensorFunctions {
      * @param value - the preset value to choose
      */
     public void setShotReadyValue(int value) {
-        shotReadyValue = vm.SHOT_POWER_VALUES[value];
+        shotReadyValue = value;
     }
 
     public boolean shotReady() {
-        return winchPot.getValue() > shotReadyValue || !winchLimit.get(); 
+        return winchPot.getValue() > vm.SHOT_POWER_VALUES[shotReadyValue] || !winchLimit.get(); 
     }
 //    public double getLeftDriveEncoder() {
 //        return driveLeftE.getDistance();

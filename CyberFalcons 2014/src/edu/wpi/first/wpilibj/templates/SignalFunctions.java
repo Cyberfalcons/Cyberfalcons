@@ -13,14 +13,23 @@ import edu.wpi.first.wpilibj.DigitalOutput;
 public class SignalFunctions {
 
     VariableMap vm;
+    SensorFunctions sf;
     DigitalOutput catchSignal;
+    DigitalOutput standbySignal;
 
-    public SignalFunctions(DigitalOutput cs, VariableMap vMap) {
+    public SignalFunctions(DigitalOutput cs, DigitalOutput ss,VariableMap vMap, SensorFunctions sFunctions) {
         catchSignal = cs;
+        standbySignal = ss;
         vm = vMap;
+        sf = sFunctions;
     }
     
     public void updateLights() {
         catchSignal.set(vm.autoCatching);
+        if (!vm.autoCatching && vm.standby && sf.shotReady()) {
+            standbySignal.set(true);
+        } else {
+            standbySignal.set(false);
+        }
     }
 }
