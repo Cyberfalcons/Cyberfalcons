@@ -15,8 +15,8 @@ import edu.wpi.first.wpilibj.Victor;
  */
 public class ShootingFunctions {
 
-    boolean shotFired;
-    int cyclesSinceLastShot;
+    boolean shotFired; // shot was fired last cycle
+    int cyclesSinceLastShot; // track time since last shot
     // PID Controller for autoshots
     PIDController neckController;
     // Pickup Pivot Motor
@@ -83,7 +83,7 @@ public class ShootingFunctions {
             holdNeckPosition();
             vm.fireCalled = true;
             if (vm.jawOpen) {
-                vm.fireCalledCycles = 10000;
+                vm.fireCalledCycles = vm.timerOverload;
             }
             readyShot();
         }
@@ -94,7 +94,7 @@ public class ShootingFunctions {
             if (!vm.fireCalled) {
                 if (vm.jawOpen) {
                     vm.fireCalled = true;
-                    vm.fireCalledCycles = 10000;
+                    vm.fireCalledCycles = vm.timerOverload;
                 } else {
                     vm.fireCalled = true;
                     vm.fireCalledCycles = 0;
@@ -118,14 +118,13 @@ public class ShootingFunctions {
             resetFire.set(false);
             fire.set(false);
             shotFired = false;
-            pf.setJawClose();
         } else {
             if (sf.shotReady()) {
                 winch.set(0);
                 resetFire.set(false);
                 fire.set(false);
                 cyclesSinceLastShot = 0;
-            } else if (cyclesSinceLastShot > 20) {
+            } else if (cyclesSinceLastShot > 20) { // leave time for the kicker to finish swinging
                 resetFire.set(true);
                 fire.set(false);
                 winch.set(-1);

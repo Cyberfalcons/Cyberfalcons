@@ -54,12 +54,19 @@ public class PickupFunctions {
         neckControl = nc;
     }
 
+    /**
+     * Runs a pickup routine to get the ball from in front
+     */
     public void frontPickUp() {
         vm.currentNeckSetPoint = vm.FRONT_LOAD_POS;
         neckControl.setSetpoint(vm.currentNeckSetPoint);
         // Spin the rollers to swallow the ball
         moveRollerForward();
-        if (sFunctions.isBallOnUltraSound()) {
+        /* keep picking up until the ball is detected by the ultra sound
+         * after which, roll only enough to move the ball to a good position
+         * and finaly close on the ball and stop the pickup routine
+         */
+        if (sFunctions.isBallOnUltraSound()) { 
             if (pickupEndTimer > 25) {
                 vm.autoCatching = true;
                 pickupEndTimer = 0;
@@ -71,14 +78,23 @@ public class PickupFunctions {
         }
         if (vm.jawOpen) {
             setJawClose();
+        } else {
+            stopJawPistons();
         }
     }
 
+    /**
+     * Runs a pickup routine to get the ball from behind
+     */
     public void backPickUp() {
         vm.currentNeckSetPoint = vm.BACK_LOAD_POS;
         neckControl.setSetpoint(vm.currentNeckSetPoint);
         // Spin the rollers to swallow the ball
         moveRollerReverse();
+        /* keep picking up until the ball is detected by the ultra sound
+         * after which, roll only enough to move the ball to a good position
+         * and finaly close on the ball and stop the pickup routine
+         */
         if (sFunctions.isBallOnUltraSound()) {
             if (pickupEndTimer > 30) {
                 pickupEndTimer = 0;
@@ -90,9 +106,15 @@ public class PickupFunctions {
         }
         if (!vm.jawOpen) {
             setJawOpen();
+        } else {
+            stopJawPistons();
         }
     }
 
+    /**
+     * Uses the PID controller that is enabled/disabled in the main class to
+     * move to an upright position
+     */
     public void moveToUprightPos() {
         vm.autoUpright = true;
         stopJawPistons();
@@ -127,10 +149,6 @@ public class PickupFunctions {
         } else {
             setJawOpen();
         }
-    }
-
-    public void manualCatch() {
-        setJawClose();
     }
 
     public void setJawOpen() {

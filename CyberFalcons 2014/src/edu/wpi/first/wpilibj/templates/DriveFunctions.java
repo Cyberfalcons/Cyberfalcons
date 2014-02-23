@@ -12,15 +12,6 @@ import edu.wpi.first.wpilibj.*;
  */
 public class DriveFunctions {
 
-    /**
-     * Dead-zone tolerance for the joysticks. The keyword 'final' means that
-     * this variable can not be assigned to (changed) elsewhere in the code.
-     */
-    // PID Controller
-//    PIDController pidCL;
-//    PIDController pidCL2;
-//    PIDController pidCR;
-//    PIDController pidCR2;
     // Drive motors
     Talon driveRight;
     Talon driveRight2;
@@ -29,9 +20,6 @@ public class DriveFunctions {
     // Shifting Solenoids
     Solenoid shift1;
     Solenoid shift2;
-    // Drive encoders
-//    Encoder driveLeftE;
-//    Encoder driveRightE;
     // Sensor access
     SensorFunctions sf;
     // Constant Variable Access
@@ -39,43 +27,34 @@ public class DriveFunctions {
     // Control Variables
     boolean controlFlip;
     boolean controlFlipClean;
-    boolean holdingPosition;
 
     /**
      *
-     * @param dr - the right side drive talon
-     * @param dl - the left side drive talon
-     * @param s1 - the first shifting solenoid
-     * @param s2 - the second shifting solenoid
-     * @param cf - the control flip variable
-     * @param dz - the joystick Dead-zone
+     * @param dr the right side drive talon
+     * @param dl the left side drive talon
+     * @param s1 the first shifting solenoid
+     * @param s2 the second shifting solenoid
+     * @param sFunctions the sensor functions class
+     * @param vMap the variable map class
      */
-    public DriveFunctions(Talon dr, Talon dr2, Talon dl, Talon dl2, /*Encoder drE, Encoder dlE,*/ Solenoid s1,
+    public DriveFunctions(Talon dr, Talon dr2, Talon dl, Talon dl2, Solenoid s1,
             Solenoid s2, SensorFunctions sFunctions, VariableMap vMap) {
         driveRight = dr;
         driveRight2 = dr2;
         driveLeft = dl;
         driveLeft2 = dl2;
-//        driveRightE = drE;
-//        driveLeftE = dlE;
         shift1 = s1;
         shift2 = s2;
         controlFlip = false;
         controlFlipClean = true;
         vm = vMap;
         sf = sFunctions;
-        holdingPosition = false;
-//        pidCL = new PIDController(1,1,0,driveLeftE,driveLeft);
-//        pidCL2 = new PIDController(1,1,0,driveLeftE,driveLeft2);
-//        pidCR = new PIDController(1,1,0,driveRightE,driveRight);
-//        pidCR2 = new PIDController(1,1,0,driveRightE,driveRight2);
     }
 
     public void resetDriveSystem() {
         setDriveRight(0);
         setDriveLeft(0);
         notShifting();
-//        notHoldingPosition();
     }
 
     /**
@@ -88,13 +67,13 @@ public class DriveFunctions {
             if (!controlFlip) {
                 driveLeft.set(-power);
             } else {
-                driveRight.set(-power);
+                driveRight.set(-power); // if controls are flipped the commanded left side is the physical right side
             }
         } else {
             if (!controlFlip) {
-                driveLeft.set(-power);
+                driveLeft.set(0);
             } else {
-                driveRight.set(-power);
+                driveRight.set(0);
             }
         }
         if (!controlFlip) {
@@ -112,15 +91,15 @@ public class DriveFunctions {
     public void setDriveRight(double power) {
         if (power < -vm.DEADZONE || power > vm.DEADZONE) {
             if (controlFlip) {
-                driveLeft.set(power);
+                driveLeft.set(power);// if controls are flipped the commanded left side is the physical left side
             } else {
                 driveRight.set(power);
             }
         } else {
             if (controlFlip) {
-                driveLeft.set(power);
+                driveLeft.set(0);
             } else {
-                driveRight.set(power);
+                driveRight.set(0);
             }
         }
         if (controlFlip) {
@@ -154,36 +133,6 @@ public class DriveFunctions {
         shift2.set(false);
     }
 
-//    public void holdPosition(double position) {
-//        if (!pidCL.isEnable()) {
-//            driveLeftE.reset();
-//            pidCL.enable();
-//            pidCL2.enable();
-//        }
-//        if (!pidCR.isEnable()) {
-//            driveRightE.reset();
-//            pidCR.enable();
-//            pidCR2.enable();
-//        }
-//        pidCL.setSetpoint(position);
-//        pidCL2.setSetpoint(position);
-//        pidCR.setSetpoint(position);
-//        pidCR2.setSetpoint(position);
-//    }
-//    
-//    public void notHoldingPosition() {
-//        pidCL.disable();
-//        pidCL2.disable();
-//        pidCR.disable();
-//        pidCR2.disable();
-//    }
-//    
-//    public boolean isHoldingPosition() {
-//        if (pidCL.isEnable() || pidCR.isEnable()) {
-//            return true;
-//        }
-//        return false;
-//    }
     /**
      * Switches the direction that is forward for driving.
      */

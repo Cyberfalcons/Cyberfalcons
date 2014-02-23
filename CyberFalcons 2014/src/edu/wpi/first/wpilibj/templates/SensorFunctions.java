@@ -18,10 +18,10 @@ public class SensorFunctions {
     VariableMap vm;
     DigitalInput ardUltra;
     DigitalInput winchLimit;
+    DigitalInput frontLimit;
+    DigitalInput backLimit;
     AnalogChannel neckPot;
     AnalogChannel winchPot;
-//    Encoder driveLeftE;
-//    Encoder driveRightE;
     PIDController neckControl;
 
     /**
@@ -31,9 +31,12 @@ public class SensorFunctions {
      * @param u the ultrasound sensor
      * @param vMap the variable map class
      * @param nc the PIDController for the neck
+     * @param wl the winch limit switch
+     * @param fl the front limit switch
+     * @param bl the back limit switch
      */
     public SensorFunctions(AnalogChannel np, AnalogChannel wp, DigitalInput u,
-            VariableMap vMap, PIDController nc, DigitalInput wl/*, Encoder dl, Encoder dr*/) {
+            VariableMap vMap, PIDController nc, DigitalInput wl, DigitalInput fl, DigitalInput bl) {
         neckPot = np;
         winchPot = wp;
         ardUltra = u;
@@ -41,8 +44,8 @@ public class SensorFunctions {
         shotReadyValue = 0;
         neckControl = nc;
         winchLimit = wl;
-//        driveLeftE = dl;
-//        driveRightE = dr;
+        frontLimit = fl;
+        backLimit = bl;
     }
 
     public boolean isBallOnUltraSound() {
@@ -57,27 +60,13 @@ public class SensorFunctions {
         return winchPot.getValue();
     }
 
-    public boolean neckInFrontLoadPosition() {
-        if (getNeckPot() >= vm.FRONT_LOAD_POS - 5) {
-            return true;
-        }
-        return false;
-    }
-
-    public boolean neckInBackLoadPosition() {
-        if (getNeckPot() <= vm.BACK_LOAD_POS + 5) {
-            return true;
-        }
-        return false;
-    }
-
     /**
      * Returns true if neck cannot move back any farther
      *
      * @return
      */
     public boolean neckPastMin() {
-        return (getNeckPot() <= vm.BACK_LOAD_POS);
+        return backLimit.get();
     }
 
     /**
@@ -86,7 +75,7 @@ public class SensorFunctions {
      * @return
      */
     public boolean neckPastMax() {
-        return (getNeckPot() >= vm.FRONT_LOAD_POS);
+        return frontLimit.get();
     }
 
     /**
@@ -99,18 +88,6 @@ public class SensorFunctions {
     }
 
     public boolean shotReady() {
-        return winchPot.getValue() > vm.SHOT_POWER_VALUES[shotReadyValue] || !winchLimit.get(); 
+        return winchPot.getValue() > vm.SHOT_POWER_VALUES[shotReadyValue] || !winchLimit.get();
     }
-//    public double getLeftDriveEncoder() {
-//        return driveLeftE.getDistance();
-//    }
-//    
-//    public double getRightDriveEncoder() {
-//        return driveRightE.getDistance();
-//    }
-//    
-//    public void zeroDriveEncoders() {
-//        driveLeftE.reset();
-//        driveRightE.reset();
-//    }
 }

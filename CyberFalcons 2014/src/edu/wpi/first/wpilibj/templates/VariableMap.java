@@ -8,6 +8,7 @@ public class VariableMap {
      * this variable can not be assigned to (changed) elsewhere in the code.
      */
     public double DEADZONE = 0.15;
+    public int timerOverload = 100000;
     public boolean autoCatching;
     public boolean autoUpright;
     public boolean pickingUp;
@@ -17,12 +18,21 @@ public class VariableMap {
     public boolean fireCalled;
     public boolean jawOpen;
     public boolean standby;
+    // Autonomous Variables
+    public boolean movedForward = false; // used to track when robot has finished moving forward
+    public int autoCycles = 0; // used to keep track of how many cycles have passed during autonomus for timing purposes
+    // Operation Variables - tracks robot state during telop/test
+    public boolean teleopActive = false; // whether the driver is ready to operate during teleop
+    public boolean yClean = true; // used to track when a button is pressed and held to avoid repeated calling of functions
+    public boolean limitClean = true; // used to track when a limit switch is pressed to avoid repeated calling of functions
+    public int currentAutoShot = 0; // used to track which angle the automatic shot is set for
     public int fireCalledCycles;
     public int currentNeckSetPoint;
+    // Important shot angle stuff
     public int[] SHOT_POWER_VALUES = {2000, 1000}; // high power, low power
-    public int FRONT_LOAD_POS = 2000; // the back + 106
-    public int BACK_LOAD_POS = 0; // the front - 106
-    public int JAW_UPRIGHT_POS = BACK_LOAD_POS + 36;
+    public int FRONT_LOAD_POS = 2000; // the back + 110
+    public int BACK_LOAD_POS = 0; // the front - 110
+    public int JAW_UPRIGHT_POS = BACK_LOAD_POS + 33;
     public int[] SHOT_POT_VALUES = {BACK_LOAD_POS, BACK_LOAD_POS, BACK_LOAD_POS}; // low far; high far; truss
 
     /**
@@ -30,9 +40,9 @@ public class VariableMap {
      * limit switch
      */
     public void freeNeckValues() {
-        FRONT_LOAD_POS = 2000; // the back + 100
-        BACK_LOAD_POS = 0; // the front - 100
-        JAW_UPRIGHT_POS = BACK_LOAD_POS + 36;
+        FRONT_LOAD_POS = 2000; // the back + 110
+        BACK_LOAD_POS = 0; // the front - 110
+        JAW_UPRIGHT_POS = BACK_LOAD_POS + 33;
     }
 
     /**
@@ -46,18 +56,14 @@ public class VariableMap {
         if (frontLimit) {
             FRONT_LOAD_POS = sf.getNeckPot();
             BACK_LOAD_POS = FRONT_LOAD_POS - 110;
-            JAW_UPRIGHT_POS = BACK_LOAD_POS + 33;
-            SHOT_POT_VALUES[0] = BACK_LOAD_POS + 62;
-            SHOT_POT_VALUES[1] = BACK_LOAD_POS + 66;
-            SHOT_POT_VALUES[2] = BACK_LOAD_POS + 50;
         } else {
             BACK_LOAD_POS = sf.getNeckPot();
             FRONT_LOAD_POS = BACK_LOAD_POS + 110;
-            JAW_UPRIGHT_POS = BACK_LOAD_POS + 33;
-            SHOT_POT_VALUES[0] = BACK_LOAD_POS + 62;
-            SHOT_POT_VALUES[1] = BACK_LOAD_POS + 66;
-            SHOT_POT_VALUES[2] = BACK_LOAD_POS + 50;
         }
+        JAW_UPRIGHT_POS = BACK_LOAD_POS + 33;
+        SHOT_POT_VALUES[0] = BACK_LOAD_POS + 62;
+        SHOT_POT_VALUES[1] = BACK_LOAD_POS + 66;
+        SHOT_POT_VALUES[2] = BACK_LOAD_POS + 50;
     }
 
     /**
@@ -93,10 +99,6 @@ public class VariableMap {
     public static int DIO_WINCH_LIMIT = 5;
     public static int DIO_STANDBY_SIGNAL = 13;
     public static int DIO_CATCH_SIGNAL = 14;
-//    public static int DIO_ENCODER_RIGHT_A = 2;
-//    public static int DIO_ENCODER_RIGHT_B = 3;
-//    public static int DIO_ENCODER_LEFT_A = 4;
-//    public static int DIO_ENCODER_LEFT_B = 5;
     // Analog
     public static int ANALOG_NECK_POT = 1;
     public static int ANALOG_WINCH_POT = 2;
