@@ -17,7 +17,7 @@ public class VariableMap {
     public boolean holdCalled;
     public boolean fireCalled;
     public boolean jawOpen;
-    public boolean standby;
+    public int lightCounter = 0;
     // Autonomous Variables
     public boolean movedForward = false; // used to track when robot has finished moving forward
     public int autoCycles = 0; // used to keep track of how many cycles have passed during autonomus for timing purposes

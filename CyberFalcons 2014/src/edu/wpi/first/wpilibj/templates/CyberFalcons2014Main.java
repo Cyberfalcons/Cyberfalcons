@@ -62,8 +62,8 @@ public class CyberFalcons2014Main extends IterativeRobot {
     DigitalInput backLimit;
     DigitalInput winchLimit;
     // Light Signals - in WPI library
-    DigitalOutput catchSignal;
-    DigitalOutput standbySignal;
+    DigitalOutput signal1;
+    DigitalOutput signal2;
 
     /**
      * This function is run when the robot is first started up and should be
@@ -105,8 +105,8 @@ public class CyberFalcons2014Main extends IterativeRobot {
         backLimit = new DigitalInput(/*cRIO slot*/1, VariableMap.DIO_BACK_LIMIT);
         winchLimit = new DigitalInput(/*cRIO slot*/1, VariableMap.DIO_WINCH_LIMIT);
         // Light Signals
-        catchSignal = new DigitalOutput(/*cRIO slot*/1, VariableMap.DIO_CATCH_SIGNAL);
-        standbySignal = new DigitalOutput(/*cRIO slot*/1, VariableMap.DIO_STANDBY_SIGNAL);
+        signal1 = new DigitalOutput(/*cRIO slot*/1, VariableMap.DIO_CATCH_SIGNAL);
+        signal2 = new DigitalOutput(/*cRIO slot*/1, VariableMap.DIO_STANDBY_SIGNAL);
         // PID Controllers
         neckControl = new PIDController(-0.23, 0, -0.1, neckPot, neck);
 
@@ -117,7 +117,7 @@ public class CyberFalcons2014Main extends IterativeRobot {
         pf = new PickupFunctions(neck, roller, openJaw, closeJaw, neckPot, sf, vm, neckControl);
         shf = new ShootingFunctions(neck, winch, openJaw, closeJaw, fire,
                 resetFire, neckPot, sf, vm, neckControl, pf);
-        sigf = new SignalFunctions(catchSignal, standbySignal, vm, sf);
+        sigf = new SignalFunctions(signal1, signal2, vm, sf);
 
         // State Variable Initializations within the variable map class
         vm.pickingUp = false;
@@ -145,7 +145,7 @@ public class CyberFalcons2014Main extends IterativeRobot {
         vm.currentNeckSetPoint = sf.getNeckPot();
         neckControl.setSetpoint(vm.currentNeckSetPoint);
         neckControl.enable();
-        vm.standby = false;
+        vm.lightCounter = 0;
         vm.movedForward = false;
         vm.autoCycles = 0;
         df.shiftLow();
@@ -184,7 +184,7 @@ public class CyberFalcons2014Main extends IterativeRobot {
         vm.currentNeckSetPoint = sf.getNeckPot();
         neckControl.setSetpoint(vm.currentNeckSetPoint);
         neckControl.disable();
-        vm.standby = true;
+        vm.lightCounter = 0;
         df.shiftHigh();
     }
 
@@ -222,7 +222,7 @@ public class CyberFalcons2014Main extends IterativeRobot {
         vm.currentNeckSetPoint = sf.getNeckPot();
         neckControl.setSetpoint(vm.currentNeckSetPoint);
         neckControl.disable();
-        vm.standby = true;
+        vm.lightCounter = 0;
     }
 
     /**
@@ -396,7 +396,7 @@ public class CyberFalcons2014Main extends IterativeRobot {
         }
         // Standby Light
         if (xboxOperator.getDpadX() < -0.5) {
-            vm.standby = !vm.standby;
+            vm.lightCounter++;
         }
     }
 }
