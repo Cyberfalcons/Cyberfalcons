@@ -157,13 +157,16 @@ public class CyberFalcons2014Main extends IterativeRobot {
     public void autonomousPeriodic() {
         Watchdog.getInstance().feed(); // Tell watchdog we are running
         checkForLimitUpdates();
-        if (vm.autoCycles < 100) { // drive forward for a set amount of time
-            df.setDriveLeft(-0.5);
-            df.setDriveRight(-0.5);
+        if (vm.autoCycles < 120) { // drive forward for a set amount of time
+            df.setDriveLeft(-1);
+            df.setDriveRight(-1);
         } else { // after driving, shoot
             df.setDriveLeft(0);
             df.setDriveRight(0);
             shf.autoShot(1);
+            if (vm.fireCalled) {
+                shf.fire();
+            }
         }
 
         vm.autoCycles++;

@@ -88,6 +88,6 @@ public class SensorFunctions {
     }
 
     public boolean shotReady() {
-        return winchPot.getValue() > vm.SHOT_POWER_VALUES[shotReadyValue] || !winchLimit.get();
+        return /*winchPot.getValue() > vm.SHOT_POWER_VALUES[shotReadyValue] ||*/ !winchLimit.get();
     }
 }

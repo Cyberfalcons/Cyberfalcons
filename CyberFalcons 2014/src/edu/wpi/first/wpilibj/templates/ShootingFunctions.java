@@ -81,10 +81,12 @@ public class ShootingFunctions {
         neckController.setSetpoint(vm.currentNeckSetPoint);
         if (sf.getNeckPot() == vm.SHOT_POT_VALUES[shot]) {
             holdNeckPosition();
-            vm.fireCalled = true;
-            if (vm.jawOpen) {
+            if (vm.jawOpen && !vm.fireCalled) {
                 vm.fireCalledCycles = vm.timerOverload;
+            } else {
+                vm.fireCalledCycles++;
             }
+            vm.fireCalled = true;
             readyShot();
         }
     }
