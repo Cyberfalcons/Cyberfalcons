@@ -64,6 +64,10 @@ public class CyberFalcons2014Main extends IterativeRobot {
     // Light Signals - in WPI library
     DigitalOutput signal1;
     DigitalOutput signal2;
+    // Auto delay signal
+    DigitalInput autoSig1;
+    DigitalInput autoSig2;
+    DigitalInput autoSig3;
 
     /**
      * This function is run when the robot is first started up and should be
@@ -109,9 +113,14 @@ public class CyberFalcons2014Main extends IterativeRobot {
         signal2 = new DigitalOutput(/*cRIO slot*/1, VariableMap.DIO_STANDBY_SIGNAL);
         // PID Controllers
         neckControl = new PIDController(-0.23, 0, -0.1, neckPot, neck);
+        // Auto timer Signals
+        autoSig1 = new DigitalInput(/*cRIO slot*/1, VariableMap.DIO_AUTO_SIG_1);
+        autoSig2 = new DigitalInput(/*cRIO slot*/1, VariableMap.DIO_AUTO_SIG_2);
+        autoSig3 = new DigitalInput(/*cRIO slot*/1, VariableMap.DIO_AUTO_SIG_3);
+
 
         // All the various function classes must be passed the controllers they interact with
-        sf = new SensorFunctions(neckPot, winchPot, ultra, vm, neckControl, winchLimit, frontLimit, backLimit);
+        sf = new SensorFunctions(neckPot, winchPot, ultra, vm, neckControl, winchLimit, frontLimit, backLimit, autoSig1, autoSig2, autoSig3);
         df = new DriveFunctions(talonDriveRight, talonDriveRight2, talonDriveLeft, talonDriveLeft2,
                 shifter1, shifter2, sf, vm);
         pf = new PickupFunctions(neck, roller, openJaw, closeJaw, neckPot, sf, vm, neckControl);
@@ -157,18 +166,35 @@ public class CyberFalcons2014Main extends IterativeRobot {
     public void autonomousPeriodic() {
         Watchdog.getInstance().feed(); // Tell watchdog we are running
         checkForLimitUpdates();
-        if (vm.autoCycles < 120) { // drive forward for a set amount of time
-            df.setDriveLeft(-1);
-            df.setDriveRight(-1);
-        } else { // after driving, shoot
-            df.setDriveLeft(0);
-            df.setDriveRight(0);
-            shf.autoShot(1);
-            if (vm.fireCalled) {
-                shf.fire();
+        if (sf.getAutonomousTimer() == 0) {
+            if (vm.autoCycles < 120) { // drive forward for a set amount of time
+                df.setDriveLeft(-1);
+                df.setDriveRight(-1);
+            } else { // after driving, shoot
+                df.setDriveLeft(0);
+                df.setDriveRight(0);
+                shf.autoShot(1);
+                if (vm.fireCalled) {
+                    shf.fire();
+                }
+            }
+        } else if (sf.getAutonomousTimer() == 10) {
+            if (vm.autoCycles < 40) { // drive forward for a set amount of time
+                df.setDriveLeft(-1);
+                df.setDriveRight(-1);
+            } else { // after driving, stop and do nothing
+                df.setDriveLeft(0);
+                df.setDriveRight(0);
+            }
+        } else {
+            if (vm.autoCycles > sf.getAutonomousTimer() * 50) {
+                vm.currentNeckSetPoint = vm.JAW_UPRIGHT_POS + 20;
+                neckControl.setSetpoint(vm.currentNeckSetPoint);
+                if (sf.getNeckPot() == vm.currentNeckSetPoint) {
+                    pf.moveRollerReverse();
+                }
             }
         }
-
         vm.autoCycles++;
     }
 
@@ -307,11 +333,9 @@ public class CyberFalcons2014Main extends IterativeRobot {
         if (xboxDriver.getBtnA()) { // Driver button A starts the frontpickup
             vm.pickingUp = true;
             vm.pickingFront = true;
-            pf.setJawClose();
         } else if (xboxDriver.getBtnB()) { // Driver button B starts the rearpickup
             vm.pickingUp = true;
             vm.pickingFront = false;
-            pf.setJawOpen();
         } else if (xboxDriver.getBtnY()) { // Driver button Y ends pickup
             vm.pickingUp = false;
             vm.autoShooting = false;
@@ -324,7 +348,7 @@ public class CyberFalcons2014Main extends IterativeRobot {
             } else {
                 pf.backPickUp();
             }
-        } else if (xboxDriver.getBtnX() || xboxOperator.getBtnLB() || vm.fireCalled) { // rollers spit ball out when driver holds x or operator holds left bumper
+        } else if (xboxDriver.getBtnX() || xboxOperator.getBtnLB()) { // rollers spit ball out when driver holds x or operator holds left bumper
             pf.moveRollerReverse();
         } else if (xboxOperator.getBtnRB()) { // roller pulls ball in while operator holds right bumper
             pf.moveRollerForward();
@@ -377,10 +401,10 @@ public class CyberFalcons2014Main extends IterativeRobot {
             vm.yClean = true;
         }
         // Jaw Management
-        if (xboxOperator.getLeftTrigger() || vm.autoUpright) { // operator can close the jaw with left trigger
+        if (xboxOperator.getLeftTrigger() || vm.autoUpright || xboxDriver.getBtnA()) { // operator can close the jaw with left trigger
             pf.setJawClose();
             vm.autoCatching = false;
-        } else if (xboxOperator.getRightTrigger()) { // operator can open the jaw with right trigger
+        } else if (xboxOperator.getRightTrigger() || xboxDriver.getBtnB()) { // operator can open the jaw with right trigger
             pf.setJawOpen();
             vm.autoCatching = false;
         } else if (vm.autoCatching) { // if autocatch is enabled the automatic catching program will run

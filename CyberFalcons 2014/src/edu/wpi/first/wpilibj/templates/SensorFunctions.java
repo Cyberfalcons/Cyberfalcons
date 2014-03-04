@@ -23,6 +23,10 @@ public class SensorFunctions {
     AnalogChannel neckPot;
     AnalogChannel winchPot;
     PIDController neckControl;
+    // Auto delay signal
+    DigitalInput autoSig1;
+    DigitalInput autoSig2;
+    DigitalInput autoSig3;
 
     /**
      *
@@ -34,9 +38,13 @@ public class SensorFunctions {
      * @param wl the winch limit switch
      * @param fl the front limit switch
      * @param bl the back limit switch
+     * @param as1 the first signal for the autonomous timer
+     * @param as2 the second signal for the autonomous timer
+     * @param as3 the third signal for the autonomous timer
      */
     public SensorFunctions(AnalogChannel np, AnalogChannel wp, DigitalInput u,
-            VariableMap vMap, PIDController nc, DigitalInput wl, DigitalInput fl, DigitalInput bl) {
+            VariableMap vMap, PIDController nc, DigitalInput wl, DigitalInput fl,
+            DigitalInput bl, DigitalInput as1, DigitalInput as2, DigitalInput as3) {
         neckPot = np;
         winchPot = wp;
         ardUltra = u;
@@ -46,6 +54,9 @@ public class SensorFunctions {
         winchLimit = wl;
         frontLimit = fl;
         backLimit = bl;
+        autoSig1 = as1;
+        autoSig2 = as2;
+        autoSig3 = as3;
     }
 
     public boolean isBallOnUltraSound() {
@@ -90,4 +101,44 @@ public class SensorFunctions {
     public boolean shotReady() {
         return /*winchPot.getValue() > vm.SHOT_POWER_VALUES[shotReadyValue] ||*/ !winchLimit.get();
     }
+    
+    /**
+     * Uses 3 binary inputs to determine what the total wait time should be in
+     * autonomous.
+     * 
+     * @return the time to wait in seconds
+     */
+    public int getAutonomousTimer() {
+        // signal 1 is 4, signal 2 is 2, signal 1 is 1
+        if (autoSig1.get()) {
+            if (autoSig2.get()) {
+                if (autoSig3.get()) {
+                    return 10;
+                } else {
+                    return 8;
+                }
+            } else {
+                if (autoSig3.get()) {
+                    return 7;
+                } else {
+                    return 6;
+                }
+            }
+        } else {
+            if (autoSig2.get()) {
+                if (autoSig3.get()) {
+                    return 4;
+                } else {
+                    return 3;
+                }
+            } else {
+                if (autoSig3.get()) {
+                    return 2;
+                } else {
+                    return 0;
+                }
+            }
+        }
+    }
+    
 }

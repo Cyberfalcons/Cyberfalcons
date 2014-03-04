@@ -97,6 +97,9 @@ public class VariableMap {
     public static int DIO_FRONT_LIMIT = 3;
     public static int DIO_BACK_LIMIT = 4;
     public static int DIO_WINCH_LIMIT = 5;
+    public static int DIO_AUTO_SIG_1 = 10;
+    public static int DIO_AUTO_SIG_2 = 11;
+    public static int DIO_AUTO_SIG_3 = 12;
     public static int DIO_STANDBY_SIGNAL = 13;
     public static int DIO_CATCH_SIGNAL = 14;
     // Analog

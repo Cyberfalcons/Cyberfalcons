@@ -76,11 +76,6 @@ public class PickupFunctions {
                 pickupEndTimer++;
             }
         }
-        if (vm.jawOpen) {
-            setJawClose();
-        } else {
-            stopJawPistons();
-        }
     }
 
     /**
@@ -103,11 +98,6 @@ public class PickupFunctions {
             } else {
                 pickupEndTimer++;
             }
-        }
-        if (!vm.jawOpen) {
-            setJawOpen();
-        } else {
-            stopJawPistons();
         }
     }
 
