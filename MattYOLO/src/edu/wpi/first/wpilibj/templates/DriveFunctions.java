@@ -56,17 +56,18 @@ public class DriveFunctions {
      * @param power - should be a directly given joystick input
      */
     public void setDriveLeft(double power) {
-        if (power < -DEADZONE || power > DEADZONE) {
-            if (controlFlip) {
+        if (power < DEADZONE || power > DEADZONE) {
+            if (!controlFlip) {
                 driveLeft.set(power);
-                driveLeft2.set(power);
             } else {
-                driveLeft.set(-power);
-                driveLeft2.set(-power);
+                driveRight.set(power); // if controls are flipped the commanded left side is the physical right side
             }
         } else {
-            driveLeft.set(0);
-            driveLeft2.set(0);
+            if (!controlFlip) {
+                driveLeft.set(0);
+            } else {
+                driveRight.set(0);
+            }
         }
     }
 
@@ -78,15 +79,16 @@ public class DriveFunctions {
     public void setDriveRight(double power) {
         if (power < -DEADZONE || power > DEADZONE) {
             if (controlFlip) {
-                driveRight.set(-power);
-                driveRight2.set(-power);
+                driveLeft.set(-power);// if controls are flipped the commanded left side is the physical left side
             } else {
-                driveRight.set(power);
-                driveRight2.set(power);
+                driveRight.set(-power);
             }
         } else {
-            driveRight.set(0);
-            driveRight2.set(0);
+            if (controlFlip) {
+                driveLeft.set(0);
+            } else {
+                driveRight.set(0);
+            }
         }
     }
 }
