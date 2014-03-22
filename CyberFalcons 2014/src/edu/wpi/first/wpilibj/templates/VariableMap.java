@@ -2,7 +2,9 @@ package edu.wpi.first.wpilibj.templates;
 
 public class VariableMap {
     //Constants
-
+    final static int ENCODER_PULSES_PER_REVOLUTION = 100;//100 was chosen arbitrarily, need to find actual value;
+    final static int ENCODER_GEAR_RATIO_SCALE_FACTOR = 100;//100 was chosen arbitrarily, need to find actual value;
+    public static double ENCODER_DISTANCE_PER_PULSE = 4*Math.PI/*wheel circumference*//ENCODER_PULSES_PER_REVOLUTION*ENCODER_GEAR_RATIO_SCALE_FACTOR;
     /**
      * Dead-zone tolerance for the joysticks. The keyword 'final' means that
      * this variable can not be assigned to (changed) elsewhere in the code.
@@ -20,10 +22,12 @@ public class VariableMap {
     public int lightCounter = 0;
     // Autonomous Variables
     public boolean movedForward = false; // used to track when robot has finished moving forward
+    public boolean hasShot = false; // used to track when the robot has fired a shot
     public int autoCycles = 0; // used to keep track of how many cycles have passed during autonomus for timing purposes
     // Operation Variables - tracks robot state during telop/test
     public boolean teleopActive = false; // whether the driver is ready to operate during teleop
     public boolean yClean = true; // used to track when a button is pressed and held to avoid repeated calling of functions
+    public boolean dClean = true; // used to track when a button is pressed and held to avoid repeated calling of functions
     public boolean limitClean = true; // used to track when a limit switch is pressed to avoid repeated calling of functions
     public int currentAutoShot = 0; // used to track which angle the automatic shot is set for
     public int fireCalledCycles;
@@ -33,16 +37,19 @@ public class VariableMap {
     public int FRONT_LOAD_POS = 2000; // the back + 110
     public int BACK_LOAD_POS = 0; // the front - 110
     public int JAW_UPRIGHT_POS = BACK_LOAD_POS + 33;
-    public int[] SHOT_POT_VALUES = {BACK_LOAD_POS, BACK_LOAD_POS, BACK_LOAD_POS}; // low far; high far; truss
+    public int[] SHOT_POT_VALUES = {FRONT_LOAD_POS, FRONT_LOAD_POS, FRONT_LOAD_POS}; // low far; high far; truss
 
     /**
      * For Initializing the neck so it is free to move until set by hitting
      * limit switch
      */
     public void freeNeckValues() {
-        FRONT_LOAD_POS = 2000; // the back + 110
+        FRONT_LOAD_POS = 2000; // the back + 110`
         BACK_LOAD_POS = 0; // the front - 110
         JAW_UPRIGHT_POS = BACK_LOAD_POS + 33;
+        SHOT_POT_VALUES[0] = FRONT_LOAD_POS + 62;
+        SHOT_POT_VALUES[1] = FRONT_LOAD_POS + 66;
+        SHOT_POT_VALUES[2] = FRONT_LOAD_POS + 50;
     }
 
     /**
@@ -55,12 +62,12 @@ public class VariableMap {
     public void updateNeckPotValues(SensorFunctions sf, boolean frontLimit) {
         if (frontLimit) {
             FRONT_LOAD_POS = sf.getNeckPot();
-            BACK_LOAD_POS = FRONT_LOAD_POS - 110;
+            BACK_LOAD_POS = FRONT_LOAD_POS - 100;
         } else {
-            BACK_LOAD_POS = sf.getNeckPot();
-            FRONT_LOAD_POS = BACK_LOAD_POS + 110;
+            BACK_LOAD_POS = sf.getNeckPot()-1;
+            FRONT_LOAD_POS = BACK_LOAD_POS + 100;
         }
-        JAW_UPRIGHT_POS = BACK_LOAD_POS + 33;
+        JAW_UPRIGHT_POS = BACK_LOAD_POS + 29;
         SHOT_POT_VALUES[0] = BACK_LOAD_POS + 62;
         SHOT_POT_VALUES[1] = BACK_LOAD_POS + 66;
         SHOT_POT_VALUES[2] = BACK_LOAD_POS + 50;
@@ -71,8 +78,8 @@ public class VariableMap {
      * limit switch is pressed
      */
     public void updateWinchPotValues(SensorFunctions sf) {
-        SHOT_POWER_VALUES[0] = sf.getNeckPot() - 3;
-        SHOT_POWER_VALUES[1] = sf.getNeckPot() - 50;
+        SHOT_POWER_VALUES[0] = sf.getWinchPot() + 3;
+        SHOT_POWER_VALUES[1] = sf.getWinchPot() + 50;
     }
     //PWM
     public static int PWM_DRIVERIGHT = 3;
@@ -97,6 +104,10 @@ public class VariableMap {
     public static int DIO_FRONT_LIMIT = 3;
     public static int DIO_BACK_LIMIT = 4;
     public static int DIO_WINCH_LIMIT = 5;
+    public static int DIO_ENCODER_RIGHT_A = 6;
+    public static int DIO_ENCODER_RIGHT_B = 7;
+    public static int DIO_ENCODER_LEFT_A = 8;
+    public static int DIO_ENCODER_LEFT_B = 9;
     public static int DIO_AUTO_SIG_1 = 10;
     public static int DIO_AUTO_SIG_2 = 11;
     public static int DIO_AUTO_SIG_3 = 12;

@@ -101,7 +101,7 @@ public class ShootingFunctions {
                     vm.fireCalled = true;
                     vm.fireCalledCycles = 0;
                 }
-            } else if (vm.fireCalledCycles > 50) {
+            } else if (vm.fireCalledCycles > 65) {
                 fire.set(true);
                 resetFire.set(false);
                 shotFired = true;

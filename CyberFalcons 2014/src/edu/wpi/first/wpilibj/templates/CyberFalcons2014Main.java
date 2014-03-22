@@ -7,6 +7,7 @@
 package edu.wpi.first.wpilibj.templates;
 
 import edu.wpi.first.wpilibj.*;
+import edu.wpi.first.wpilibj.CounterBase.EncodingType;
 
 /**
  * The VM is configured to automatically run this class, and to call the
@@ -29,6 +30,10 @@ public class CyberFalcons2014Main extends IterativeRobot {
     SignalFunctions sigf;
     // PID Controller - in WPI library
     PIDController neckControl;
+    PIDController driveRightPID;
+    PIDController driveRight2PID;
+    PIDController driveLeftPID;
+    PIDController driveLeft2PID;
     // Xbox controllers - team 3710 wrapper class
     XBoxController xboxDriver;
     XBoxController xboxOperator;
@@ -61,6 +66,8 @@ public class CyberFalcons2014Main extends IterativeRobot {
     DigitalInput frontLimit;
     DigitalInput backLimit;
     DigitalInput winchLimit;
+    Encoder driveLeftE;
+    Encoder driveRightE;
     // Light Signals - in WPI library
     DigitalOutput signal1;
     DigitalOutput signal2;
@@ -108,11 +115,27 @@ public class CyberFalcons2014Main extends IterativeRobot {
         frontLimit = new DigitalInput(/*cRIO slot*/1, VariableMap.DIO_FRONT_LIMIT);
         backLimit = new DigitalInput(/*cRIO slot*/1, VariableMap.DIO_BACK_LIMIT);
         winchLimit = new DigitalInput(/*cRIO slot*/1, VariableMap.DIO_WINCH_LIMIT);
+        driveRightE = new Encoder(VariableMap.DIO_ENCODER_RIGHT_A, VariableMap.DIO_ENCODER_RIGHT_B, false, EncodingType.k4X);
+        driveLeftE = new Encoder(VariableMap.DIO_ENCODER_LEFT_A, VariableMap.DIO_ENCODER_LEFT_B, true, EncodingType.k4X);
+        // Encoder setup
+        driveRightE.setPIDSourceParameter(PIDSource.PIDSourceParameter.kDistance);
+        driveLeftE.setPIDSourceParameter(PIDSource.PIDSourceParameter.kDistance);
+        driveRightE.setDistancePerPulse(VariableMap.ENCODER_DISTANCE_PER_PULSE);
+        driveLeftE.setDistancePerPulse(VariableMap.ENCODER_DISTANCE_PER_PULSE);
+        driveRightE.start();
+        driveLeftE.start();
+        driveRightE.reset();
+        driveLeftE.reset();
         // Light Signals
         signal1 = new DigitalOutput(/*cRIO slot*/1, VariableMap.DIO_CATCH_SIGNAL);
         signal2 = new DigitalOutput(/*cRIO slot*/1, VariableMap.DIO_STANDBY_SIGNAL);
         // PID Controllers
         neckControl = new PIDController(-0.23, 0, -0.1, neckPot, neck);
+        driveRightPID = new PIDController(1, 0, 0, driveRightE, talonDriveRight);
+        driveRight2PID = new PIDController(1, 0, 0, driveRightE, talonDriveRight2);
+        driveLeftPID = new PIDController(1, 0, 0, driveLeftE, talonDriveLeft);
+        driveLeft2PID = new PIDController(1, 0, 0, driveLeftE, talonDriveLeft2);
+
         // Auto timer Signals
         autoSig1 = new DigitalInput(/*cRIO slot*/1, VariableMap.DIO_AUTO_SIG_1);
         autoSig2 = new DigitalInput(/*cRIO slot*/1, VariableMap.DIO_AUTO_SIG_2);
@@ -136,9 +159,11 @@ public class CyberFalcons2014Main extends IterativeRobot {
         vm.teleopActive = false;
         vm.yClean = true;
         vm.limitClean = true;
+        vm.dClean = true;
         vm.currentAutoShot = 0;
         vm.movedForward = false;
         vm.autoCycles = 0;
+        vm.hasShot = false;
 
     }
 
@@ -148,6 +173,7 @@ public class CyberFalcons2014Main extends IterativeRobot {
     public void autonomousInit() {
         df.resetDriveSystem();
         shf.resetShootingSystem();
+        vm.freeNeckValues();
         vm.pickingUp = false;
         vm.autoCatching = false;
         vm.autoUpright = false;
@@ -157,7 +183,19 @@ public class CyberFalcons2014Main extends IterativeRobot {
         vm.lightCounter = 0;
         vm.movedForward = false;
         vm.autoCycles = 0;
+        vm.hasShot = false;
         df.shiftLow();
+        if (sf.getAutonomousTimer() == 12) { // PID Controlled High Shot
+            driveRightPID.enable();
+            driveRight2PID.enable();
+            driveLeftPID.enable();
+            driveLeft2PID.enable();
+        } else {
+            driveRightPID.disable();
+            driveRight2PID.disable();
+            driveLeftPID.disable();
+            driveLeft2PID.disable();
+        }
     }
 
     /**
@@ -166,20 +204,38 @@ public class CyberFalcons2014Main extends IterativeRobot {
     public void autonomousPeriodic() {
         Watchdog.getInstance().feed(); // Tell watchdog we are running
         checkForLimitUpdates();
-        if (sf.getAutonomousTimer() == 0) {
-            if (vm.autoCycles < 120) { // drive forward for a set amount of time
+        if (sf.getAutonomousTimer() == 0) { // all switches off
+            if (vm.autoCycles < 27) { // drive forward for a set amount of time
                 df.setDriveLeft(-1);
                 df.setDriveRight(-1);
             } else { // after driving, shoot
                 df.setDriveLeft(0);
                 df.setDriveRight(0);
-                shf.autoShot(1);
-                if (vm.fireCalled) {
+                shf.autoShot(0);
+                if (vm.fireCalled && !vm.hasShot) {
                     shf.fire();
+                    if (shf.shotFired) {
+                        vm.hasShot = true;
+                    }
                 }
             }
-        } else if (sf.getAutonomousTimer() == 10) {
-            if (vm.autoCycles < 40) { // drive forward for a set amount of time
+        } else if (sf.getAutonomousTimer() == 12) { // switch 1&2 on but 3 off
+            int shotPositionDisplacement = 60; // needs to be swapped for distance after testing
+            driveRightPID.setSetpoint(shotPositionDisplacement);
+            driveRight2PID.setSetpoint(shotPositionDisplacement);
+            driveLeftPID.setSetpoint(shotPositionDisplacement);
+            driveLeft2PID.setSetpoint(shotPositionDisplacement);
+            if (driveRightPID.onTarget() && driveLeftPID.onTarget()) { // after driving, shoot
+                shf.autoShot(0);
+                if (vm.fireCalled && !vm.hasShot) {
+                    shf.fire();
+                    if (shf.shotFired) {
+                        vm.hasShot = true;
+                    }
+                }
+            }
+        } else if (sf.getAutonomousTimer() == 10) { // all switches on
+            if (vm.autoCycles < 20) { // drive forward for a set amount of time
                 df.setDriveLeft(-1);
                 df.setDriveRight(-1);
             } else { // after driving, stop and do nothing
@@ -215,6 +271,11 @@ public class CyberFalcons2014Main extends IterativeRobot {
         neckControl.disable();
         vm.lightCounter = 0;
         df.shiftHigh();
+
+        driveRightPID.disable();
+        driveRight2PID.disable();
+        driveLeftPID.disable();
+        driveLeft2PID.disable();
     }
 
     /**
@@ -252,6 +313,11 @@ public class CyberFalcons2014Main extends IterativeRobot {
         neckControl.setSetpoint(vm.currentNeckSetPoint);
         neckControl.disable();
         vm.lightCounter = 0;
+
+        driveRightPID.disable();
+        driveRight2PID.disable();
+        driveLeftPID.disable();
+        driveLeft2PID.disable();
     }
 
     /**
@@ -263,10 +329,14 @@ public class CyberFalcons2014Main extends IterativeRobot {
         checkForLimitUpdates();
         sigf.updateLights();
         // Printout to console for debugging purposes
-        System.out.println("\tNeck Max: " + vm.FRONT_LOAD_POS
-                + "Neck Min" + vm.BACK_LOAD_POS + "\tNeck Upright: " + vm.JAW_UPRIGHT_POS
-                + "\tWinch Pot: " + winchPot.getValue() + "\tWinch Limit: " + winchLimit.get()
-                + "\tNeck Pot: " + neckPot.getValue() + "\tNeck Setpoint: " + vm.currentNeckSetPoint);
+//        System.out.println("\tNeck Max: " + vm.FRONT_LOAD_POS
+//                + "Neck Min" + vm.BACK_LOAD_POS + "\tNeck Upright: " + vm.JAW_UPRIGHT_POS
+//                + "\tWinch Pot: " + winchPot.getValue() + "\tWinch Limit: " + winchLimit.get()
+//                + "\tNeck Pot: " + neckPot.getValue() + "\tNeck Setpoint: " + vm.currentNeckSetPoint
+//                + "\tFront Limit: " + frontLimit.get() + "\tBack Limit: " + backLimit.get());
+        System.out.println(driveLeftE.getDistance() + "\t" + driveLeftE.getDirection() 
+                + "\t" + driveRightE.getDistance() + "\t" + driveRightE.getDirection());
+
     }
 
     /**
@@ -294,8 +364,8 @@ public class CyberFalcons2014Main extends IterativeRobot {
     }
 
     public void checkForLimitUpdates() {
-        if (frontLimit.get()) {
-            if (vm.limitClean) {
+        if (!frontLimit.get()) {
+            if (!vm.limitClean) {
                 vm.updateNeckPotValues(sf, true);
             }
             vm.currentNeckSetPoint = vm.FRONT_LOAD_POS;
@@ -388,7 +458,7 @@ public class CyberFalcons2014Main extends IterativeRobot {
         }
         if (xboxOperator.getBtnBACK()) { // winch will wind to preset 1 when activated if back button is pressed by operator
             sf.setShotReadyValue(0);
-        } else if (xboxOperator.getBtnSTART()) { // winch will wind to preset 1 when activated if start button is pressed by operator
+        } else if (xboxOperator.getBtnSTART()) { // winch will wind to preset 2 when activated if start button is pressed by operator
             sf.setShotReadyValue(1);
         }
         // Auto Catch Toggle
@@ -423,7 +493,12 @@ public class CyberFalcons2014Main extends IterativeRobot {
         }
         // Standby Light
         if (xboxOperator.getDpadX() < -0.5) {
-            vm.lightCounter++;
+            if (vm.dClean) {
+                vm.lightCounter++;
+                vm.dClean = false;
+            }
+        } else {
+            vm.dClean = true;
         }
     }
 }

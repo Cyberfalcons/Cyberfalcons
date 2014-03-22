@@ -86,7 +86,7 @@ public class SensorFunctions {
      * @return
      */
     public boolean neckPastMax() {
-        return frontLimit.get();
+        return !frontLimit.get();
     }
 
     /**
@@ -99,6 +99,9 @@ public class SensorFunctions {
     }
 
     public boolean shotReady() {
+        if (shotReadyValue == 1) {
+            return winchPot.getValue() < vm.SHOT_POWER_VALUES[shotReadyValue] || !winchLimit.get();
+        }
         return /*winchPot.getValue() > vm.SHOT_POWER_VALUES[shotReadyValue] ||*/ !winchLimit.get();
     }
     
@@ -115,19 +118,19 @@ public class SensorFunctions {
                 if (autoSig3.get()) {
                     return 10;
                 } else {
-                    return 8;
+                    return 12;
                 }
             } else {
                 if (autoSig3.get()) {
-                    return 7;
+                    return 8;
                 } else {
-                    return 6;
+                    return 7;
                 }
             }
         } else {
             if (autoSig2.get()) {
                 if (autoSig3.get()) {
-                    return 4;
+                    return 5;
                 } else {
                     return 3;
                 }

@@ -66,16 +66,16 @@ public class PickupFunctions {
          * after which, roll only enough to move the ball to a good position
          * and finaly close on the ball and stop the pickup routine
          */
-        if (sFunctions.isBallOnUltraSound()) { 
-            if (pickupEndTimer > 25) {
-                vm.autoCatching = true;
-                pickupEndTimer = 0;
-                turnRollerOff();
-                vm.pickingUp = false;
-            } else {
-                pickupEndTimer++;
-            }
-        }
+//        if (sFunctions.isBallOnUltraSound()) { 
+//            if (pickupEndTimer > 25) {
+//                vm.autoCatching = true;
+//                pickupEndTimer = 0;
+//                turnRollerOff();
+//                vm.pickingUp = false;
+//            } else {
+//                pickupEndTimer++;
+//            }
+//        }
     }
 
     /**
@@ -90,15 +90,15 @@ public class PickupFunctions {
          * after which, roll only enough to move the ball to a good position
          * and finaly close on the ball and stop the pickup routine
          */
-        if (sFunctions.isBallOnUltraSound()) {
-            if (pickupEndTimer > 30) {
-                pickupEndTimer = 0;
-                turnRollerOff();
-                vm.pickingUp = false;
-            } else {
-                pickupEndTimer++;
-            }
-        }
+//        if (sFunctions.isBallOnUltraSound()) {
+//            if (pickupEndTimer > 30) {
+//                pickupEndTimer = 0;
+//                turnRollerOff();
+//                vm.pickingUp = false;
+//            } else {
+//                pickupEndTimer++;
+//            }
+//        }
     }
 
     /**
