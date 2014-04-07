@@ -131,10 +131,14 @@ public class CyberFalcons2014Main extends IterativeRobot {
         signal2 = new DigitalOutput(/*cRIO slot*/1, VariableMap.DIO_STANDBY_SIGNAL);
         // PID Controllers
         neckControl = new PIDController(-0.23, 0, -0.1, neckPot, neck);
-        driveRightPID = new PIDController(1, 0, 0, driveRightE, talonDriveRight);
-        driveRight2PID = new PIDController(1, 0, 0, driveRightE, talonDriveRight2);
-        driveLeftPID = new PIDController(1, 0, 0, driveLeftE, talonDriveLeft);
-        driveLeft2PID = new PIDController(1, 0, 0, driveLeftE, talonDriveLeft2);
+        driveRightPID = new PIDController(-.5, 0, 0, driveRightE, talonDriveRight);
+        driveRight2PID = new PIDController(-.5, 0, 0, driveRightE, talonDriveRight2);
+        driveLeftPID = new PIDController(.5, 0, 0, driveLeftE, talonDriveLeft);
+        driveLeft2PID = new PIDController(.5, 0, 0, driveLeftE, talonDriveLeft2);
+        driveRightPID.setAbsoluteTolerance(.5);
+        driveRight2PID.setAbsoluteTolerance(.5);
+        driveLeftPID.setAbsoluteTolerance(.5);
+        driveLeft2PID.setAbsoluteTolerance(.5);
 
         // Auto timer Signals
         autoSig1 = new DigitalInput(/*cRIO slot*/1, VariableMap.DIO_AUTO_SIG_1);
@@ -196,6 +200,9 @@ public class CyberFalcons2014Main extends IterativeRobot {
             driveLeftPID.disable();
             driveLeft2PID.disable();
         }
+            
+        driveLeftE.reset();
+        driveRightE.reset();
     }
 
     /**
@@ -216,11 +223,12 @@ public class CyberFalcons2014Main extends IterativeRobot {
                     shf.fire();
                     if (shf.shotFired) {
                         vm.hasShot = true;
+                        System.out.println(driveRightE.getDistance());
                     }
                 }
             }
         } else if (sf.getAutonomousTimer() == 12) { // switch 1&2 on but 3 off
-            int shotPositionDisplacement = 60; // needs to be swapped for distance after testing
+            int shotPositionDisplacement = 130; // needs to be swapped for distance after testing
             driveRightPID.setSetpoint(shotPositionDisplacement);
             driveRight2PID.setSetpoint(shotPositionDisplacement);
             driveLeftPID.setSetpoint(shotPositionDisplacement);
@@ -234,6 +242,9 @@ public class CyberFalcons2014Main extends IterativeRobot {
                     }
                 }
             }
+            
+        System.out.println(driveLeftE.get() + "\t" + driveLeftE.getDistance() + "\t" + driveLeftE.getDirection() 
+                + "\t" + driveRightE.get() + "\t" + driveRightE.getDistance() + "\t" + driveRightE.getDirection());
         } else if (sf.getAutonomousTimer() == 10) { // all switches on
             if (vm.autoCycles < 20) { // drive forward for a set amount of time
                 df.setDriveLeft(-1);
@@ -318,6 +329,9 @@ public class CyberFalcons2014Main extends IterativeRobot {
         driveRight2PID.disable();
         driveLeftPID.disable();
         driveLeft2PID.disable();
+        
+        driveLeftE.reset();
+        driveRightE.reset();
     }
 
     /**
@@ -328,14 +342,16 @@ public class CyberFalcons2014Main extends IterativeRobot {
         ballManipulator();
         checkForLimitUpdates();
         sigf.updateLights();
-        // Printout to console for debugging purposes
-//        System.out.println("\tNeck Max: " + vm.FRONT_LOAD_POS
-//                + "Neck Min" + vm.BACK_LOAD_POS + "\tNeck Upright: " + vm.JAW_UPRIGHT_POS
-//                + "\tWinch Pot: " + winchPot.getValue() + "\tWinch Limit: " + winchLimit.get()
-//                + "\tNeck Pot: " + neckPot.getValue() + "\tNeck Setpoint: " + vm.currentNeckSetPoint
-//                + "\tFront Limit: " + frontLimit.get() + "\tBack Limit: " + backLimit.get());
-        System.out.println(driveLeftE.getDistance() + "\t" + driveLeftE.getDirection() 
-                + "\t" + driveRightE.getDistance() + "\t" + driveRightE.getDirection());
+//        // Printout to console for debugging purposes
+        System.out.println("\tNeck Max: " + vm.FRONT_LOAD_POS
+                + "Neck Min" + vm.BACK_LOAD_POS + "\tNeck Upright: " + vm.JAW_UPRIGHT_POS
+                + "\tWinch Pot: " + winchPot.getValue() + "\tWinch Limit: " + winchLimit.get()
+                + "\tNeck Pot: " + neckPot.getValue() + "\tNeck from Front: " + (vm.FRONT_LOAD_POS - neckPot.getValue())
+                + "\tFront Limit: " + frontLimit.get() + "\tBack Limit: " + backLimit.get());
+        
+//        System.out.println(driveLeftE.get() + "\t" + driveLeftE.getDistance() + "\t" + driveLeftE.getDirection() 
+//                + "\t" + driveRightE.get() + "\t" + driveRightE.getDistance() + "\t" + driveRightE.getDirection());
+        
 
     }
 

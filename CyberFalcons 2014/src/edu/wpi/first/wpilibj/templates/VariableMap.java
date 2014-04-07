@@ -2,9 +2,8 @@ package edu.wpi.first.wpilibj.templates;
 
 public class VariableMap {
     //Constants
-    final static int ENCODER_PULSES_PER_REVOLUTION = 100;//100 was chosen arbitrarily, need to find actual value;
-    final static int ENCODER_GEAR_RATIO_SCALE_FACTOR = 100;//100 was chosen arbitrarily, need to find actual value;
-    public static double ENCODER_DISTANCE_PER_PULSE = 4*Math.PI/*wheel circumference*//ENCODER_PULSES_PER_REVOLUTION*ENCODER_GEAR_RATIO_SCALE_FACTOR;
+
+    public static double ENCODER_DISTANCE_PER_PULSE = 0.0425;//distance in inches
     /**
      * Dead-zone tolerance for the joysticks. The keyword 'final' means that
      * this variable can not be assigned to (changed) elsewhere in the code.
@@ -37,7 +36,7 @@ public class VariableMap {
     public int FRONT_LOAD_POS = 2000; // the back + 110
     public int BACK_LOAD_POS = 0; // the front - 110
     public int JAW_UPRIGHT_POS = BACK_LOAD_POS + 33;
-    public int[] SHOT_POT_VALUES = {FRONT_LOAD_POS, FRONT_LOAD_POS, FRONT_LOAD_POS}; // low far; high far; truss
+    public int[] SHOT_POT_VALUES = {FRONT_LOAD_POS, FRONT_LOAD_POS, FRONT_LOAD_POS, FRONT_LOAD_POS}; // low far; high far; truss
 
     /**
      * For Initializing the neck so it is free to move until set by hitting
@@ -50,6 +49,7 @@ public class VariableMap {
         SHOT_POT_VALUES[0] = FRONT_LOAD_POS + 62;
         SHOT_POT_VALUES[1] = FRONT_LOAD_POS + 66;
         SHOT_POT_VALUES[2] = FRONT_LOAD_POS + 50;
+        SHOT_POT_VALUES[3] = FRONT_LOAD_POS + 47;
     }
 
     /**
@@ -64,13 +64,14 @@ public class VariableMap {
             FRONT_LOAD_POS = sf.getNeckPot();
             BACK_LOAD_POS = FRONT_LOAD_POS - 100;
         } else {
-            BACK_LOAD_POS = sf.getNeckPot()-1;
+            BACK_LOAD_POS = sf.getNeckPot() - 1;
             FRONT_LOAD_POS = BACK_LOAD_POS + 100;
         }
         JAW_UPRIGHT_POS = BACK_LOAD_POS + 29;
-        SHOT_POT_VALUES[0] = BACK_LOAD_POS + 62;
-        SHOT_POT_VALUES[1] = BACK_LOAD_POS + 66;
-        SHOT_POT_VALUES[2] = BACK_LOAD_POS + 50;
+        SHOT_POT_VALUES[0] = FRONT_LOAD_POS - 41;
+        SHOT_POT_VALUES[1] = FRONT_LOAD_POS - 34;
+        SHOT_POT_VALUES[2] = FRONT_LOAD_POS - 50;
+        SHOT_POT_VALUES[3] = FRONT_LOAD_POS - 53;
     }
 
     /**
@@ -92,8 +93,8 @@ public class VariableMap {
     //Relays
     public static int SPIKE_COMPRESSOR = 8;
     //Solonoids
-    public static int SOLO_SHIFT_LOW = 3;
-    public static int SOLO_SHIFT_HIGH = 4;
+    public static int SOLO_SHIFT_LOW = 4;
+    public static int SOLO_SHIFT_HIGH = 3;
     public static int SOLO_FIRE_SHOOTER = 5;
     public static int SOLO_RESET_SHOOTER = 6;
     public static int SOLO_JAW_OPEN = 1;
