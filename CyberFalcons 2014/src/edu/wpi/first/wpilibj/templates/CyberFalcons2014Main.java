@@ -215,6 +215,8 @@ public class CyberFalcons2014Main extends IterativeRobot {
             
         driveLeftE.reset();
         driveRightE.reset();
+        vm.currentNeckSetPoint = vm.JAW_UPRIGHT_POS + 20;
+        neckControl.setSetpoint(vm.currentNeckSetPoint);
     }
 
     /**
@@ -249,8 +251,7 @@ public class CyberFalcons2014Main extends IterativeRobot {
             {
                 //shf.autoShot(0);
                 //if (sf.shotReady()) { pf.moveRollerReverse(); }
-                vm.currentNeckSetPoint = vm.JAW_UPRIGHT_POS + 20;
-                neckControl.setSetpoint(vm.currentNeckSetPoint);
+                
                 if (sf.getNeckPot() == vm.currentNeckSetPoint) {
                     pf.moveRollerReverse();
                 }
@@ -261,8 +262,8 @@ public class CyberFalcons2014Main extends IterativeRobot {
             if (server.getLeftStatus() == true)
             {
                 System.out.println("test!");
-                df.setDriveLeft(-0.7);
-                df.setDriveRight(-0.7);
+                df.setDriveLeft(-1);
+                df.setDriveRight(-1);
             } else
             {
                 df.setDriveLeft(0);
