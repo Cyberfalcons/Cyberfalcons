@@ -247,8 +247,13 @@ public class CyberFalcons2014Main extends IterativeRobot {
             }*/
             if (server.getRightStatus() == true)
             {
-                shf.autoShot(0);
-                if (sf.shotReady()) { pf.moveRollerReverse(); }
+                //shf.autoShot(0);
+                //if (sf.shotReady()) { pf.moveRollerReverse(); }
+                vm.currentNeckSetPoint = vm.JAW_UPRIGHT_POS + 20;
+                neckControl.setSetpoint(vm.currentNeckSetPoint);
+                if (sf.getNeckPot() == vm.currentNeckSetPoint) {
+                    pf.moveRollerReverse();
+                }
             } else
             {
                 pf.turnRollerOff();
