@@ -26,6 +26,7 @@ public class VariableMap {
     // Operation Variables - tracks robot state during telop/test
     public boolean teleopActive = false; // whether the driver is ready to operate during teleop
     public boolean yClean = true; // used to track when a button is pressed and held to avoid repeated calling of functions
+    public boolean LBClean = true; // used to track when a button is pressed and held to avoid repeated calling of functions
     public boolean dClean = true; // used to track when a button is pressed and held to avoid repeated calling of functions
     public boolean limitClean = true; // used to track when a limit switch is pressed to avoid repeated calling of functions
     public int currentAutoShot = 0; // used to track which angle the automatic shot is set for

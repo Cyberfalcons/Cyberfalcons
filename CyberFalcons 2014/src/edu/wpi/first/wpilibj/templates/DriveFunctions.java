@@ -27,6 +27,7 @@ public class DriveFunctions {
     // Control Variables
     boolean controlFlip;
     boolean controlFlipClean;
+    boolean shiftToggle = true;
 
     /**
      *
@@ -91,7 +92,7 @@ public class DriveFunctions {
     public void setDriveRight(double power) {
         if (power < -vm.DEADZONE || power > vm.DEADZONE) {
             if (controlFlip) {
-                driveLeft.set(power);// if controls are flipped the commanded left side is the physical left side
+                driveLeft.set(-power);// if controls are flipped the commanded left side is the physical left side
             } else {
                 driveRight.set(power);
             }
@@ -109,6 +110,19 @@ public class DriveFunctions {
         }
     }
 
+    /**
+     * Toggles the Shifting of the robot between high and low
+     */
+    public void shiftToggle(){
+        if(shiftToggle){
+            shiftHigh();
+            shiftToggle = false;
+        }else{
+            shiftLow();
+            shiftToggle = true;
+        }   
+    }
+    
     /**
      * Shifts to high gear.
      */

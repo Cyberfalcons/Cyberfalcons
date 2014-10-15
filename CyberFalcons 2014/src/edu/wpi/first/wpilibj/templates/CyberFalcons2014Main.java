@@ -6,6 +6,7 @@
 /*----------------------------------------------------------------------------*/
 package edu.wpi.first.wpilibj.templates;
 
+import com.team254.lib.CheesyVisionServer;
 import edu.wpi.first.wpilibj.*;
 import edu.wpi.first.wpilibj.CounterBase.EncodingType;
 
@@ -19,6 +20,9 @@ import edu.wpi.first.wpilibj.CounterBase.EncodingType;
  * @author Nathan Hicks
  */
 public class CyberFalcons2014Main extends IterativeRobot {
+    //start cheesy server
+    CheesyVisionServer server = CheesyVisionServer.getInstance();
+    public final int listenPort = 1180;
 // Initializing Varibles
     // Custom Functions for this robot
 
@@ -81,6 +85,10 @@ public class CyberFalcons2014Main extends IterativeRobot {
      * used for any initialization code.
      */
     public void robotInit() {
+        //Cheesy Listen
+        server.setPort(listenPort);
+        server.start();
+        
         vm = new VariableMap();
         // Xbox Controllers
         xboxDriver = new XBoxController(1); // USB port 1
@@ -175,6 +183,10 @@ public class CyberFalcons2014Main extends IterativeRobot {
      * This function is called at the start of autonomous
      */
     public void autonomousInit() {
+        //Cheesy Server
+        server.reset();
+        server.startSamplingCounts();
+        
         df.resetDriveSystem();
         shf.resetShootingSystem();
         vm.freeNeckValues();
@@ -211,8 +223,14 @@ public class CyberFalcons2014Main extends IterativeRobot {
     public void autonomousPeriodic() {
         Watchdog.getInstance().feed(); // Tell watchdog we are running
         checkForLimitUpdates();
-        if (sf.getAutonomousTimer() == 0) { // all switches off
-            if (vm.autoCycles < 27) { // drive forward for a set amount of time
+        
+        //Cheesy Outputs
+        System.out.println("Current left: " + server.getLeftStatus() + ", current right: " + server.getRightStatus());
+        System.out.println("Left count: " + server.getLeftCount() + ", right count: " + server.getRightCount() + ", total: " + server.getTotalCount() + "\n");
+    
+                
+       // if (sf.getAutonomousTimer() == 0) { // all switches off
+            /*if (vm.autoCycles < 27) { // drive forward for a set amount of time
                 df.setDriveLeft(-1);
                 df.setDriveRight(-1);
             } else { // after driving, shoot
@@ -226,50 +244,73 @@ public class CyberFalcons2014Main extends IterativeRobot {
                         System.out.println(driveRightE.getDistance());
                     }
                 }
-            }
-        } else if (sf.getAutonomousTimer() == 12) { // switch 1&2 on but 3 off
-            int shotPositionDisplacement = 130; // needs to be swapped for distance after testing
-            driveRightPID.setSetpoint(shotPositionDisplacement);
-            driveRight2PID.setSetpoint(shotPositionDisplacement);
-            driveLeftPID.setSetpoint(shotPositionDisplacement);
-            driveLeft2PID.setSetpoint(shotPositionDisplacement);
-            if (driveRightPID.onTarget() && driveLeftPID.onTarget()) { // after driving, shoot
+            }*/
+            if (server.getRightStatus() == true)
+            {
                 shf.autoShot(0);
-                if (vm.fireCalled && !vm.hasShot) {
-                    shf.fire();
-                    if (shf.shotFired) {
-                        vm.hasShot = true;
-                    }
-                }
+                if (sf.shotReady()) { pf.moveRollerReverse(); }
+            } else
+            {
+                pf.turnRollerOff();
             }
-            
-        System.out.println(driveLeftE.get() + "\t" + driveLeftE.getDistance() + "\t" + driveLeftE.getDirection() 
-                + "\t" + driveRightE.get() + "\t" + driveRightE.getDistance() + "\t" + driveRightE.getDirection());
-        } else if (sf.getAutonomousTimer() == 10) { // all switches on
-            if (vm.autoCycles < 20) { // drive forward for a set amount of time
-                df.setDriveLeft(-1);
-                df.setDriveRight(-1);
-            } else { // after driving, stop and do nothing
+            if (server.getLeftStatus() == true)
+            {
+                System.out.println("test!");
+                df.setDriveLeft(-0.7);
+                df.setDriveRight(-0.7);
+            } else
+            {
                 df.setDriveLeft(0);
                 df.setDriveRight(0);
             }
-        } else {
-            if (vm.autoCycles > sf.getAutonomousTimer() * 50) {
-                vm.currentNeckSetPoint = vm.JAW_UPRIGHT_POS + 20;
-                neckControl.setSetpoint(vm.currentNeckSetPoint);
-                if (sf.getNeckPot() == vm.currentNeckSetPoint) {
-                    pf.moveRollerReverse();
-                }
-            }
-        }
-        vm.autoCycles++;
+       
+//        } else if (sf.getAutonomousTimer() == 12) { // switch 1&2 on but 3 off
+//            int shotPositionDisplacement = 130; // needs to be swapped for distance after testing
+//            driveRightPID.setSetpoint(shotPositionDisplacement);
+//            driveRight2PID.setSetpoint(shotPositionDisplacement);
+//            driveLeftPID.setSetpoint(shotPositionDisplacement);
+//            driveLeft2PID.setSetpoint(shotPositionDisplacement);
+//            if (driveRightPID.onTarget() && driveLeftPID.onTarget()) { // after driving, shoot
+//                shf.autoShot(0);
+//                if (vm.fireCalled && !vm.hasShot) {
+//                    shf.fire();
+//                    if (shf.shotFired) {
+//                        vm.hasShot = true;
+//                    }
+//                }
+//            }
+//            
+//        System.out.println(driveLeftE.get() + "\t" + driveLeftE.getDistance() + "\t" + driveLeftE.getDirection() 
+//                + "\t" + driveRightE.get() + "\t" + driveRightE.getDistance() + "\t" + driveRightE.getDirection());
+//        } else if (sf.getAutonomousTimer() == 10) { // all switches on
+//            if (vm.autoCycles < 20) { // drive forward for a set amount of time
+//                df.setDriveLeft(-1);
+//                df.setDriveRight(-1);
+//            } else { // after driving, stop and do nothing
+//                df.setDriveLeft(0);
+//                df.setDriveRight(0);
+//            }
+//        } else {
+//            if (vm.autoCycles > sf.getAutonomousTimer() * 50) {
+//                vm.currentNeckSetPoint = vm.JAW_UPRIGHT_POS + 20;
+//                neckControl.setSetpoint(vm.currentNeckSetPoint);
+//                if (sf.getNeckPot() == vm.currentNeckSetPoint) {
+//                    pf.moveRollerReverse();
+//                }
+//            }
+//        }
+//        vm.autoCycles++;
     }
 
     /**
      * This function is called at the start of operator control
      */
     public void teleopInit() {
-        df.resetDriveSystem();
+        //Reset Cheesy Server
+        server.reset();
+        server.startSamplingCounts();
+        
+    df.resetDriveSystem();
         if (df.controlFlip) {
             df.toggleControlFlip();
         }
@@ -367,10 +408,13 @@ public class CyberFalcons2014Main extends IterativeRobot {
         }
 
         if (xboxDriver.getBtnLB()) { // driver left bumper shifts to low gear
-            df.shiftLow();
-        } else if (xboxDriver.getBtnRB()) { // driver right bumper shifts to high gear
-            df.shiftHigh();
-        } else {
+            //df.shiftLow();
+            if(vm.LBClean){
+                vm.LBClean = false;
+                df.shiftToggle();
+            }
+        }else {
+            vm.LBClean = true; 
             df.notShifting();
         }
         // set drive speed to the input from the left and right thumbsticks
@@ -408,7 +452,8 @@ public class CyberFalcons2014Main extends IterativeRobot {
     public void ballManipulator() {
         vm.holdCalled = false;
         // Auto Upright enabled while driver right thumb click
-        if (xboxDriver.getBtnR3()) {
+        
+        if (xboxDriver.getBtnR3() || xboxDriver.getBtnRB()) {
             vm.autoUpright = true;
             vm.pickingUp = false;
             vm.autoShooting = false;
