@@ -66,9 +66,9 @@ public class DriveFunctions {
     public void setDriveLeft(double power) {
         if (power < -vm.DEADZONE || power > vm.DEADZONE) {
             if (!controlFlip) {
-                driveLeft.set(power);
+                driveLeft.set(-power);
             } else {
-                driveRight.set(-power); // if controls are flipped the commanded left side is the physical right side
+                driveRight.set(power); // if controls are flipped the commanded left side is the physical right side
             }
         } else {
             if (!controlFlip) {
